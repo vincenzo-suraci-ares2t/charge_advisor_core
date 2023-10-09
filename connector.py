@@ -60,36 +60,10 @@ class HomeAssistantConnector(Connector, HomeAssistantEntityMetrics):
     # Overridden Methods
     # ------------------------------------------------------------------------------------------------------------------
 
-    # overridden
-    def get_default_session_time_uom(self):
-        return HA_TIME_MINUTES
-
-    # overridden
-    def is_available_for_reservation(self):
-        return super().is_available_for_reservation() and self.is_available()
-
-    # overridden
-    def is_available_for_charging(self):
-        return super().is_available_for_charging() and self.is_available()
 
     # ------------------------------------------------------------------------------------------------------------------
     # Home Assistant Methods
     # ------------------------------------------------------------------------------------------------------------------
-
-    def is_available(self):
-        return self._charge_point.is_available()
-
-    async def call_ha_service(
-            self,
-            service_name: str,
-            state: bool = True
-    ):
-        return await self._charge_point.call_ha_service(
-            service_name=service_name,
-            state=state,
-            connector_id=self._connector_id,
-            transaction_id=self.active_transaction_id
-        )
 
     # Updates the Charge Point Home Assistant Entities and its Connectors Home Assistant Entities
     async def update_ha_entities(self):
