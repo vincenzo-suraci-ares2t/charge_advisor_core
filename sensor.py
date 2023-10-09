@@ -366,17 +366,18 @@ class ChargePointMetric(RestoreSensor, SensorEntity):
     def _schedule_immediate_update(self):
         self.async_schedule_update_ha_state(True)
 
-class ChargePointConnectorMetric(ChargePointMetric):
+class ChargePointConnectorMetric(EVSEMetric):
 
     def __init__(
         self,
         hass: HomeAssistant,
         central_system: CentralSystem,
         charge_point: ChargePoint,
+        evse: EVSE,
         connector: Connector,
         description: OcppSensorDescription,
     ):
-        super().__init__(hass, central_system, charge_point, description)
+        super().__init__(hass, central_system, charge_point, evse, description)
         self._connector = connector
         self._attr_unique_id = ".".join([
             SENSOR_DOMAIN,
@@ -387,7 +388,7 @@ class ChargePointConnectorMetric(ChargePointMetric):
         ])
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._connector.identifier)},
-            via_device=(DOMAIN, self._charge_point.id),
+            via_device=(DOMAIN, self._evse.id),
         )
 
         # OcppLog.log_d(f"Adding {self._attr_unique_id} entity")
@@ -402,6 +403,48 @@ class ChargePointConnectorMetric(ChargePointMetric):
         available = False
         if self.entity_description.availability_set is not None:
             value = self._connector.get_metric_value(HAConnectorSensors.status.value)
+            if value in self.entity_description.availability_set:
+                available = super().available
+        else:
+            available = super().available
+        return available
+
+class EVSEConnectorMetric(ChargePointMetric):
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        central_system: CentralSystem,
+        charge_point: ChargePoint,
+        evse: EVSE,
+        description: OcppSensorDescription,
+    ):
+        super().__init__(hass, central_system, charge_point, description)
+        self._evse = evse
+        self._attr_unique_id = ".".join([
+            SENSOR_DOMAIN,
+            DOMAIN,
+            self._charge_point.id,
+            str(self._evse.id),
+            self.entity_description.key
+        ])
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._evse.identifier)},
+            via_device=(DOMAIN, self._charge_point.id),
+        )
+
+        # OcppLog.log_d(f"Adding {self._attr_unique_id} entity")
+
+    @property
+    def target(self):
+        return self._evse
+
+    @property
+    def available(self) -> bool:
+        # Return if sensor is available
+        available = False
+        if self.entity_description.availability_set is not None:
+            value = self._evse.get_metric_value(HAEVSESensors.status.value)
             if value in self.entity_description.availability_set:
                 available = super().available
         else:
