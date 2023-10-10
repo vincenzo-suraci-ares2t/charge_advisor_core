@@ -32,7 +32,7 @@ from ocpp.v16.enums import ChargePointStatus, Measurand, AvailabilityType
 # ----------------------------------------------------------------------------------------------------------------------
 
 from .const import DOMAIN, ICON
-from .enums import HAChargePointServices, HAChargePointSensors, HAConnectorSensors
+from .enums import HAChargePointServices, HAChargePointSensors, HAConnectorSensors, SubProtocol
 from .logger import OcppLog
 
 # Switch configuration definitions
@@ -131,10 +131,14 @@ async def async_setup_entry(hass, entry, async_add_devices):
         charge_point = central_system.charge_points[cp_id]
         for ent in CHARGE_POINT_SWITCHES:
             entities.append(ChargePointSwitchEntity(central_system, charge_point, ent))
-        # Scorriamo i connettori del Charge Point        
-        for connector in charge_point.connectors:
-            for ent in CHARGE_POINT_CONNECTOR_SWITCHES:
-                entities.append(ChargePointConnectorSwitchEntity(central_system, charge_point, connector, ent))
+        if charge_point.ocpp_version == SubProtocol.OcppV16.value:
+            # Scorriamo i connettori del Charge Point
+            for connector in charge_point.connectors:
+                for ent in CHARGE_POINT_CONNECTOR_SWITCHES:
+                    entities.append(ChargePointConnectorSwitchEntity(central_system, charge_point, connector, ent))
+        elif charge_point.ocpp_version == SubProtocol.OcppV201.value:
+            # Scorrere gli EVSE del Charge Point.
+            pass
 
     # Aggiungiamo gli unique_id di ogni entità registrata in fase di setup al
     # Charge Point o al Connector

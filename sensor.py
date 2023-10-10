@@ -91,36 +91,39 @@ class OcppSensor:
                     )
                 )
 
-        for connector_id in range(1, charge_point.num_connectors + 1):            
-            for metric_key in list(HAConnectorSensors):
-                sensors.append(
-                    OcppSensorDescription(
-                        key=metric_key.lower(),
-                        name=metric_key.replace(".", " "),
-                        metric_key=metric_key,
-                        connector_id=connector_id,
+        if charge_point.ocpp_version == SubProtocol.OcppV16.value:
+            for connector_id in range(1, charge_point.num_connectors + 1):
+                for metric_key in list(HAConnectorSensors):
+                    sensors.append(
+                        OcppSensorDescription(
+                            key=metric_key.lower(),
+                            name=metric_key.replace(".", " "),
+                            metric_key=metric_key,
+                            connector_id=connector_id,
+                        )
                     )
-                )
-            for metric_key in list(HAConnectorChargingSessionSensors):
-                sensors.append(
-                    OcppSensorDescription(
-                        key=metric_key.lower(),
-                        name=metric_key.replace(".", " "),
-                        metric_key=metric_key,
-                        connector_id=connector_id,
-                        availability_set=CONNECTOR_CHARGING_SESSION_SENSORS_AVAILABILTY_SET,
+                for metric_key in list(HAConnectorChargingSessionSensors):
+                    sensors.append(
+                        OcppSensorDescription(
+                            key=metric_key.lower(),
+                            name=metric_key.replace(".", " "),
+                            metric_key=metric_key,
+                            connector_id=connector_id,
+                            availability_set=CONNECTOR_CHARGING_SESSION_SENSORS_AVAILABILTY_SET,
+                        )
                     )
-                )
-            for metric_key in charge_point.measurands:
-                sensors.append(
-                    OcppSensorDescription(
-                        key=metric_key.lower(),
-                        name=metric_key.replace(".", " "),
-                        metric_key=metric_key,
-                        connector_id=connector_id,
-                        availability_set=CONNECTOR_CHARGING_SESSION_SENSORS_AVAILABILTY_SET,
+                for metric_key in charge_point.measurands:
+                    sensors.append(
+                        OcppSensorDescription(
+                            key=metric_key.lower(),
+                            name=metric_key.replace(".", " "),
+                            metric_key=metric_key,
+                            connector_id=connector_id,
+                            availability_set=CONNECTOR_CHARGING_SESSION_SENSORS_AVAILABILTY_SET,
+                        )
                     )
-                )
+        elif charge_point.ocpp_version == SubProtocol.OcppV201.value:
+            pass
 
         entities = []
 
@@ -135,16 +138,19 @@ class OcppSensor:
                     )
                 )
             else:
-                connector = charge_point.get_connector_by_id(sensor.connector_id)
-                entities.append(
-                    ChargePointConnectorMetric(
-                        hass,
-                        central_system,
-                        charge_point,
-                        connector,
-                        sensor
+                if charge_point.ocpp_version == SubProtocol.OcppV16.value:
+                    connector = charge_point.get_connector_by_id(sensor.connector_id)
+                    entities.append(
+                        ChargePointConnectorMetric(
+                            hass,
+                            central_system,
+                            charge_point,
+                            connector,
+                            sensor
+                        )
                     )
-                )
+                elif charge_point.ocpp_version == SubProtocol.OcppV201.value:
+                    pass
 
         return entities
 
@@ -366,7 +372,7 @@ class ChargePointMetric(RestoreSensor, SensorEntity):
     def _schedule_immediate_update(self):
         self.async_schedule_update_ha_state(True)
 
-class ChargePointConnectorMetric(EVSEMetric):
+class ChargePointConnectorMetric(ChargePointMetric):
 
     def __init__(
         self,
