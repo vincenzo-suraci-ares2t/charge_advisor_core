@@ -41,7 +41,7 @@ from .const import *
 from .enums import *
 from .logger import OcppLog
 from .metric import HomeAssistantEntityMetrics
-from .connector import HomeAssistantConnector
+from .connector_v201 import HomeAssistantConnectorV201
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Home Assistant Voluptuous SCHEMAS
@@ -122,7 +122,7 @@ class HomeAssistantEVSE(EVSE, HomeAssistantEntityMetrics):
         self.set_metric_value(HAEVSESensors.identifier.value, id)
 
         # Lista di connettori
-        self._connectors: list[HomeAssistantConnector] = []
+        self._connectors: list[HomeAssistantConnectorV201] = []
 
     # ------------------------------------------------------------------------------------------------------------------
     # HOME ASSISTANT METHODS
@@ -174,7 +174,7 @@ class HomeAssistantEVSE(EVSE, HomeAssistantEntityMetrics):
 
     # overridden
     async def get_connector_instance(self, connector_id):
-        return HomeAssistantConnector(
+        return HomeAssistantConnectorV201(
             self._hass,
             self,
             connector_id

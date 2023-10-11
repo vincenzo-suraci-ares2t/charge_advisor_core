@@ -247,9 +247,10 @@ class HomeAssistantCentralSystem(ChargingStationManagementSystem, HomeAssistantE
         ha_dr = device_registry.async_get(self._hass)
         ha_dr.async_get_or_create(
             config_entry_id=self._config_entry.entry_id,
+            connections={("MAC", "1234")},
             identifiers={(DOMAIN, cp_id)},
             name=cp_id,
-            default_model="OCPP Charge Point",
+            model="OCPP Charge Point",
             via_device=(DOMAIN, self._id),
         )
 

@@ -22,7 +22,7 @@ from homeassistant.const import TIME_MINUTES as HA_TIME_MINUTES
 # Local packages
 # ----------------------------------------------------------------------------------------------------------------------
 
-from ocpp_central_system.connector import Connector
+from ocpp_central_system.ComponentsV201.connector_v201 import Connector
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Local files
@@ -32,7 +32,7 @@ from .const import DOMAIN
 from .metric import HomeAssistantEntityMetrics
 
 
-class HomeAssistantConnector(Connector, HomeAssistantEntityMetrics):
+class HomeAssistantConnectorV201(Connector, HomeAssistantEntityMetrics):
     """Server side representation of a charger's connector."""
 
     def __init__(
@@ -59,18 +59,6 @@ class HomeAssistantConnector(Connector, HomeAssistantEntityMetrics):
     # ------------------------------------------------------------------------------------------------------------------
     # Overridden Methods
     # ------------------------------------------------------------------------------------------------------------------
-
-    # overridden
-    def get_default_session_time_uom(self):
-        return HA_TIME_MINUTES
-
-    # overridden
-    def is_available_for_reservation(self):
-        return super().is_available_for_reservation() and self.is_available()
-
-    # overridden
-    def is_available_for_charging(self):
-        return super().is_available_for_charging() and self.is_available()
 
     # ------------------------------------------------------------------------------------------------------------------
     # Home Assistant Methods

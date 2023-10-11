@@ -379,11 +379,12 @@ class ChargePointConnectorMetric(ChargePointMetric):
         hass: HomeAssistant,
         central_system: CentralSystem,
         charge_point: ChargePoint,
-        evse: EVSE,
         connector: Connector,
         description: OcppSensorDescription,
+        evse: EVSE = None,
     ):
-        super().__init__(hass, central_system, charge_point, evse, description)
+        super().__init__(hass, central_system, charge_point, description)
+        self._evse = evse
         self._connector = connector
         self._attr_unique_id = ".".join([
             SENSOR_DOMAIN,
@@ -394,7 +395,7 @@ class ChargePointConnectorMetric(ChargePointMetric):
         ])
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._connector.identifier)},
-            via_device=(DOMAIN, self._evse.id),
+            via_device=(DOMAIN, self._evse.id if evse is not None else charge_point),
         )
 
         # OcppLog.log_d(f"Adding {self._attr_unique_id} entity")

@@ -230,7 +230,8 @@ class HomeAssistantChargePoint(ChargingStation, HomeAssistantEntityMetrics):
                     handle_data_transfer,
                     TRANS_SERVICE_DATA_SCHEMA,
                 )
-
+                OcppLog.log_e(f"Il valore di Profiles SMART {(type(Profiles.SMART).__qualname__)}, il valore di attributes profiles {(type(self.attr_supported_features).__qualname__)}")
+                OcppLog.log_e(f"Is istance { isinstance(Profiles.SMART, type(self.attr_supported_features))}")
                 if Profiles.SMART in self.attr_supported_features:
                     self._hass.services.async_register(
                         DOMAIN,
@@ -440,7 +441,7 @@ class HomeAssistantChargePoint(ChargingStation, HomeAssistantEntityMetrics):
             config_entry_id=self._config_entry.entry_id,
             identifiers={(DOMAIN, conn.identifier)},
             name=conn.identifier,
-            default_model=self.model + " Connector",
+            model=self.model + " Connector",
             via_device=(DOMAIN, self.id),
             manufacturer=self.vendor
         )
