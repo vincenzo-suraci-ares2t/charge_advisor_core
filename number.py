@@ -81,14 +81,14 @@ async def async_setup_entry(hass, entry, async_add_devices):
                 ent.native_max_value = entry.data.get(CONF_MAX_CURRENT, DEFAULT_MAX_CURRENT)
             entities.append(ChargePointOcppNumber(hass, central_system, charge_point, ent))
 
-        if charge_point.ocpp_version == SubProtocol.OcppV16.value:
+        if charge_point.connection_ocpp_version == SubProtocol.OcppV16.value:
             for connector in charge_point.connectors:
                 for ent in NUMBERS:
                     if ent.key == "maximum_current":
                         ent.initial_value = entry.data.get(CONF_MAX_CURRENT, DEFAULT_MAX_CURRENT)
                         ent.native_max_value = entry.data.get(CONF_MAX_CURRENT, DEFAULT_MAX_CURRENT)
                     entities.append(ChargePointConnectorOcppNumber(hass, central_system, charge_point, connector, ent))
-        elif charge_point.ocpp_version == SubProtocol.OcppV201.value:
+        elif charge_point.connection_ocpp_version == SubProtocol.OcppV201.value:
             pass
 
     # Aggiungiamo gli unique_id di ogni entità registrata in fase di setup al

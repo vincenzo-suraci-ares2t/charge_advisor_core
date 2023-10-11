@@ -81,11 +81,11 @@ async def async_setup_entry(hass, entry, async_add_devices):
         for ent in CHARGE_POINT_BUTTONS:
             entities.append(ChargePointButtonEntity(central_system, charge_point, ent))
 
-        if charge_point.ocpp_version == SubProtocol.OcppV16.value:
+        if charge_point.connection_ocpp_version == SubProtocol.OcppV16.value:
             for connector in charge_point.connectors:
                 for ent in CHARGE_POINT_CONNECTOR_BUTTONS:
                     entities.append(ChargePointConnectorButtonEntity(central_system, charge_point, connector, ent))
-        elif charge_point.ocpp_version == SubProtocol.OcppV201.value:
+        elif charge_point.connection_ocpp_version == SubProtocol.OcppV201.value:
             pass
 
     # Aggiungiamo gli unique_id di ogni entità registrata in fase di setup al

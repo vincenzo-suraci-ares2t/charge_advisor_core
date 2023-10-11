@@ -91,7 +91,7 @@ class OcppSensor:
                     )
                 )
 
-        if charge_point.ocpp_version == SubProtocol.OcppV16.value:
+        if charge_point.connection_ocpp_version == SubProtocol.OcppV16.value:
             for connector_id in range(1, charge_point.num_connectors + 1):
                 for metric_key in list(HAConnectorSensors):
                     sensors.append(
@@ -122,7 +122,7 @@ class OcppSensor:
                             availability_set=CONNECTOR_CHARGING_SESSION_SENSORS_AVAILABILTY_SET,
                         )
                     )
-        elif charge_point.ocpp_version == SubProtocol.OcppV201.value:
+        elif charge_point.connection_ocpp_version == SubProtocol.OcppV201.value:
             pass
 
         entities = []
@@ -138,7 +138,7 @@ class OcppSensor:
                     )
                 )
             else:
-                if charge_point.ocpp_version == SubProtocol.OcppV16.value:
+                if charge_point.connection_ocpp_version == SubProtocol.OcppV16.value:
                     connector = charge_point.get_connector_by_id(sensor.connector_id)
                     entities.append(
                         ChargePointConnectorMetric(
@@ -149,7 +149,7 @@ class OcppSensor:
                             sensor
                         )
                     )
-                elif charge_point.ocpp_version == SubProtocol.OcppV201.value:
+                elif charge_point.connection_ocpp_version == SubProtocol.OcppV201.value:
                     pass
 
         return entities

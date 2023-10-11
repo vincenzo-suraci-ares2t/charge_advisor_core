@@ -30,8 +30,8 @@ from homeassistant.const import TIME_MINUTES as HA_TIME_MINUTES
 # Local packages
 # ----------------------------------------------------------------------------------------------------------------------
 
-from ocpp_central_system.charging_station import ChargingStation
-from ocpp_central_system.ocpp_central_system.ComponentsV201.evse_v201 import EVSE
+from .ocpp_central_system.ocpp_central_system.charging_station import ChargingStation
+from .ocpp_central_system.ocpp_central_system.ComponentsV201.evse_v201 import EVSE
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Local files
@@ -144,8 +144,10 @@ class HomeAssistantEVSE(EVSE, HomeAssistantEntityMetrics):
         er = entity_registry.async_get(self._hass)
         dr = device_registry.async_get(self._hass)
         identifiers = {(DOMAIN, self.id)}
+        OcppLog.log_d(f"Identificatori EVSE: {identifiers}.")
         evse_dev = dr.async_get_device(identifiers)
         for evse_ent in entity_registry.async_entries_for_device(er, evse_dev.id):
+            OcppLog.log_d(f"Entità EVSE in esame: {evse_ent}")
             if evse_ent.unique_id not in self.ha_entity_unique_ids:
                 # source: https://github.com/home-assistant/core/blob/dev/homeassistant/helpers/entity_registry.py
                 # source: https://dev-docs.home-assistant.io/en/dev/api/helpers.html#module-homeassistant.helpers.entity_registry

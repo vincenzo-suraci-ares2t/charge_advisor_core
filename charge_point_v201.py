@@ -39,7 +39,7 @@ from .const import *
 from .enums import *
 from .logger import OcppLog
 from .metric import HomeAssistantEntityMetrics
-from .connector import HomeAssistantConnector
+from .evse import HomeAssistantEVSE
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Home Assistant Voluptuous SCHEMAS
@@ -124,8 +124,8 @@ class HomeAssistantChargePointV201(ChargingStationV201, HomeAssistantEntityMetri
         self.set_metric_value(HAChargePointSensors.identifier.value,f"EVSE: {id}")
         self.set_metric_value(HAChargePointSensors.reconnects.value, 0)
 
-        # Lista di connettori
-        self._connectors: list[HomeAssistantConnector] = []
+        # Lista degli EVSE.
+        self._evses: list[HomeAssistantEVSE] = []
 
     # overridden
     def _get_init_auth_id_tags(self):
@@ -266,7 +266,7 @@ class HomeAssistantChargePointV201(ChargingStationV201, HomeAssistantEntityMetri
     # ------------------------------------------------------------------------------------------------------------------
 
     # Updates the Charge Point Home Assistant Entities and
-    # its Connectors Home Assistant Entities
+    # its EVSE Home Assistant Entities
     async def update_ha_entities(self):
 
         while self._adding_entities or self._updating_entities:
@@ -290,8 +290,8 @@ class HomeAssistantChargePointV201(ChargingStationV201, HomeAssistantEntityMetri
                 er.async_remove(cp_ent.entity_id)
             else:
                 await entity_component.async_update_entity(self._hass, cp_ent.entity_id)
-        for conn in self._connectors:
-            await conn.update_ha_entities()
+        for evse in self._evses:
+            await evse.update_ha_entities()
 
         self._updating_entities = False
 
@@ -305,24 +305,24 @@ class HomeAssistantChargePointV201(ChargingStationV201, HomeAssistantEntityMetri
             self,
             service_name: str,
             state: bool = True,
-            connector_id: int | None = 0,
+            evse_id: int | None = 0,
             transaction_id: int | None = None
     ):
         # Carry out requested service/state change on connected charger.
         resp = False
         match service_name:
             case HAChargePointServices.service_availability.name:
-                resp = await self.set_availability(state, connector_id)
+                resp = await self.set_availability(state, evse_id)
             case HAChargePointServices.service_charge_start.name:
-                resp = await self.remote_start_transaction(connector_id)
+                resp = await self.remote_start_transaction(evse_id)
             case HAChargePointServices.service_charge_stop.name:
                 resp = await self.remote_stop_transaction(transaction_id)
             case HAChargePointServices.service_reset.name:
                 resp = await self.reset()
             case HAChargePointServices.service_unlock.name:
-                resp = await self.unlock(connector_id)
+                resp = await self.unlock(evse_id)
             case HAChargePointServices.service_set_charge_rate:
-                resp = await self.set_charge_rate(connector_id = connector_id, limit_amps=0)
+                resp = await self.set_charge_rate(evse_id = evse_id, limit_amps=0)
             case _:
                 OcppLog.log_d(f"{service_name} unknown")
         return resp
@@ -354,9 +354,9 @@ class HomeAssistantChargePointV201(ChargingStationV201, HomeAssistantEntityMetri
     # ------------------------------------------------------------------------------------------------------------------
 
     # overridden
-    def create_trigger_status_notification_task(self, connector_id):
+    def create_trigger_status_notification_task(self, evse_id):
         self._hass.async_create_task(
-            self.trigger_status_notification(connector_id)
+            self.trigger_status_notification(evse_id)
         )
 
     # overridden
@@ -421,28 +421,28 @@ class HomeAssistantChargePointV201(ChargingStationV201, HomeAssistantEntityMetri
             )
 
     # overridden
-    async def add_connectors(self, number_of_connectors):
-        await super().add_connectors(number_of_connectors)
+    async def add_evses(self, number_of_evses):
+        await super().add_evses(number_of_evses)
         await self.add_ha_entities()
 
     # overridden
-    async def get_connector_instance(self, connector_id):
-        return HomeAssistantConnector(
+    async def get_evse_instance(self, evse_id):
+        return HomeAssistantEVSE(
             self._hass,
             self,
-            connector_id
+            evse_id
         )
 
     # overridden
-    async def add_connector(self, connector_id):
+    async def add_evse(self, evse_id):
         dr = device_registry.async_get(self._hass)
-        conn = await super().add_connector(connector_id)
-        # Create Charge Point's Connector Devices
+        evse = await super().add_evse(evse_id)
+        # Create Charge Point's EVSE Devices
         dr.async_get_or_create(
             config_entry_id=self._config_entry.entry_id,
-            identifiers={(DOMAIN, conn.identifier)},
-            name=conn.identifier,
-            default_model=self.model + " Connector",
+            identifiers={(DOMAIN, evse.identifier)},
+            name=evse.identifier,
+            default_model=self.model + " EVSE",
             via_device=(DOMAIN, self.id),
             manufacturer=self.vendor
         )
