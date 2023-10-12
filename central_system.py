@@ -272,7 +272,7 @@ class HomeAssistantCentralSystem(ChargingStationManagementSystem, HomeAssistantE
             config_entry_id=self._config_entry.entry_id,
             identifiers={(DOMAIN, cp_id)},
             name=cp_id,
-            default_model="OCPP Charge Point",
+            model="OCPP Charge Point",
             via_device=(DOMAIN, self._id),
         )
 

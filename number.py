@@ -77,7 +77,7 @@ async def async_setup_entry(hass, entry, async_add_devices):
 
         for ent in NUMBERS:
             if ent.key == "maximum_current":
-                ent.initial_value = entry.data.get(CONF_MAX_CURRENT, DEFAULT_MAX_CURRENT)
+                ent.initial_value = 0
                 ent.native_max_value = entry.data.get(CONF_MAX_CURRENT, DEFAULT_MAX_CURRENT)
             entities.append(ChargePointOcppNumber(hass, central_system, charge_point, ent))
 
@@ -85,7 +85,7 @@ async def async_setup_entry(hass, entry, async_add_devices):
             for connector in charge_point.connectors:
                 for ent in NUMBERS:
                     if ent.key == "maximum_current":
-                        ent.initial_value = entry.data.get(CONF_MAX_CURRENT, DEFAULT_MAX_CURRENT)
+                        ent.initial_value = 0
                         ent.native_max_value = entry.data.get(CONF_MAX_CURRENT, DEFAULT_MAX_CURRENT)
                     entities.append(ChargePointConnectorOcppNumber(hass, central_system, charge_point, connector, ent))
         elif charge_point.connection_ocpp_version == SubProtocol.OcppV201.value:
@@ -167,37 +167,11 @@ class ChargePointOcppNumber(RestoreNumber, NumberEntity):
         """Set new value."""
         num_value = int(value)
         if self.target.is_available() and ((Profiles.SMART & self._charge_point.supported_features) or True) :
-            """
-            resp = await self.target.set_max_charge_rate(
-                limit_amps=num_value
-            )
-            """
 
             resp = await self.target.set_max_charge_rate(
-                limit_list=[
-                    {
-                        "limit_amps": 15,
-                        "start_period": 0
-                    },
-                    {
-                        "limit_amps": 10,
-                        "start_period":60
-                    },
-                    {
-                        "limit_amps": 0,
-                        "start_period":120
-                    },
-                    {
-                        "limit_amps":13,
-                        "start_period": 180
-                    }
-
-                ],
-
-                start_of_schedule = TimeUtils.get_current_ocpp_datetime()
-
-
+                limit_amps=num_value * 3
             )
+
             if resp is True:
                 self._attr_native_value = num_value
                 self.async_write_ha_state()
