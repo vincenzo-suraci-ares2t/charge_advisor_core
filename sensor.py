@@ -48,6 +48,8 @@ SCAN_INTERVAL = timedelta(seconds=DEFAULT_METER_INTERVAL)
 
 # Questo insieme contiene gli stati del connettore che rendono i sensori dipsonibili nella plancia di HA
 CONNECTOR_CHARGING_SESSION_SENSORS_AVAILABILTY_SET: Final = [
+    ChargePointStatus.preparing.value,
+    ChargePointStatus.finishing.value,
     ChargePointStatus.charging.value,
     ChargePointStatus.suspended_evse.value,
     ChargePointStatus.suspended_ev.value,
