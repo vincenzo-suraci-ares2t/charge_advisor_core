@@ -181,17 +181,17 @@ class HomeAssistantEVSE(EVSE, HomeAssistantEntityMetrics):
         )
 
     # overridden
-    async def add_connector(self, connector_id):
+    def add_connector(self, connector_id = None):
         dr = device_registry.async_get(self._hass)
-        conn = await super().add_connector(connector_id)
+        conn = super().add_connector(connector_id)
         # Create Charge Point's Connector Devices
         dr.async_get_or_create(
             config_entry_id=self._config_entry.entry_id,
-            identifiers={(DOMAIN, conn.identifier)},
-            name=conn.identifier,
-            default_model=self.model + " Connector",
+            identifiers={(DOMAIN, connector_id)},
+            name=connector_id,
+            model=self._charge_point.model + " Connector",
             via_device=(DOMAIN, self.id),
-            manufacturer=self.vendor
+            manufacturer=self._charge_point.vendor
         )
 
     # overridden
