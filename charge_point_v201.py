@@ -15,6 +15,8 @@ import asyncio
 import voluptuous as vol
 
 from ocpp.exceptions import NotImplementedError
+from ocpp.v201.enums import Action
+from ocpp.routing import on
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Home Assistant packages
@@ -120,12 +122,11 @@ class HomeAssistantChargePointV201(ChargingStationV201, HomeAssistantEntityMetri
         ChargingStationV201.__init__(self, id, connection, central, skip_schema_validation)
         HomeAssistantEntityMetrics.__init__(self)
 
+        OcppLog.log_d(f"EVSE ottenuti tramite superclasse: {self._evses}")
+
         # Impostiamo le metriche
         self.set_metric_value(HAChargePointSensors.identifier.value,f"EVSE: {id}")
         self.set_metric_value(HAChargePointSensors.reconnects.value, 0)
-
-        # Lista degli EVSE.
-        self._evses: list[HomeAssistantEVSE] = []
 
     # overridden
     def _get_init_auth_id_tags(self):
@@ -138,8 +139,12 @@ class HomeAssistantChargePointV201(ChargingStationV201, HomeAssistantEntityMetri
     # overridden
     async def post_connect(self):
 
+        OcppLog.log_w(f"Lancio post_connect HA.")
+
         # OcppLog.log_d("Triggering boot notification!!!")
         # await self.trigger_boot_notification()
+
+        # await super().post_connect()
 
         # await asyncio.sleep(10)
 
@@ -203,7 +208,11 @@ class HomeAssistantChargePointV201(ChargingStationV201, HomeAssistantEntityMetri
 
             if not self._booting:
 
-                await ChargingStationV201.post_connect(self)
+                # await ChargingStationV201.post_connect(self)
+
+                OcppLog.log_w(f"Lancio post_connect ORIGINALE.")
+                await super().post_connect()
+                OcppLog.log_w(f"Post_connect ORIGINALE terminata correttamente.")
 
                 self._booting = True
 
@@ -259,6 +268,8 @@ class HomeAssistantChargePointV201(ChargingStationV201, HomeAssistantEntityMetri
         except NotImplementedError as e:
             OcppLog.log_e(f"Configuration of the charger failed: {e}")
 
+        OcppLog.log_d(f"Post_connect HA terminata correttamente.")
+
         self._booting = False
 
     # ------------------------------------------------------------------------------------------------------------------
@@ -280,6 +291,8 @@ class HomeAssistantChargePointV201(ChargingStationV201, HomeAssistantEntityMetri
         # Update sensors values in HA
         er = entity_registry.async_get(self._hass)
         dr = device_registry.async_get(self._hass)
+        # OcppLog.log_d(f"Registro dispositivi: {dr.devices}.")
+        # OcppLog.log_d(f"Registro entità: {er.entities}.")
         identifiers = {(DOMAIN, self.id)}
         cp_dev = dr.async_get_device(identifiers)
         for cp_ent in entity_registry.async_entries_for_device(er, cp_dev.id):
@@ -291,9 +304,18 @@ class HomeAssistantChargePointV201(ChargingStationV201, HomeAssistantEntityMetri
             else:
                 await entity_component.async_update_entity(self._hass, cp_ent.entity_id)
         for evse in self._evses:
-            await evse.update_ha_entities()
+            OcppLog.log_w(f"HA-EVSE in esame: {evse}.")
+            ev_dev = dr.async_get_device({(DOMAIN, evse.id)})
+            OcppLog.log_w(f"Device EVSE associato: {ev_dev}.")
+            for ev_ent in entity_registry.async_entries_for_device(er, ev_dev.id):
+                if ev_ent.unique_id not in self.ha_entity_unique_ids:
+                    er.async_remove(ev_ent.entity_id)
+                else:
+                    await entity_component.async_update_entity(self._hass, ev_ent.entity_id)
 
         self._updating_entities = False
+
+        OcppLog.log_d(f"Aggiornamento delle entità HA terminato correttamente.")
 
     def is_available(self):
         return self._status == STATE_OK
@@ -347,13 +369,36 @@ class HomeAssistantChargePointV201(ChargingStationV201, HomeAssistantEntityMetri
             sw_version=boot_info.get(OcppMisc.charge_point_firmware_version.name, None),
         )
 
-        # OcppLog.log_d(f"{self.id} device info updated with the BootNotification data")
+        OcppLog.log_d(f"Info dispositivo {self.id} aggiornate con i dati della BootNotification.")
 
     # ------------------------------------------------------------------------------------------------------------------
     # Event Loop Tasks
     # ------------------------------------------------------------------------------------------------------------------
 
     # overridden
+    def create_evse_task(self, evse_id: int):
+        evse = super().create_evse_task(evse_id)
+        OcppLog.log_w(f"EVSE da funzione sovraccaricata generato correttamente.")
+        dr = device_registry.async_get(self._hass)
+        dr.async_get_or_create(
+            config_entry_id=self._config_entry.entry_id,
+            identifiers={(DOMAIN, evse.identifier)},
+            name=evse.identifier,
+            model=self.model + " EVSE",
+            via_device=(DOMAIN, self.id),
+            manufacturer=self.vendor
+        )
+        OcppLog.log_w(f"EVSE aggiunto correttamente al registro dispositivi.")
+        OcppLog.log_w(f"Creazione EVSE integrato...")
+        ha_evse = HomeAssistantEVSE(
+            id=str(evse_id),
+            hass=self._hass,
+            config_entry=self._config_entry,
+            charge_point=self
+        )
+        OcppLog.log_w(f"EVSE integrato creato correttamente.")
+        return ha_evse
+
     def create_trigger_status_notification_task(self, evse_id):
         self._hass.async_create_task(
             self.trigger_status_notification(evse_id)
@@ -406,12 +451,12 @@ class HomeAssistantChargePointV201(ChargingStationV201, HomeAssistantEntityMetri
         )
 
     # overridden
-    def create_remote_start_transaction_task(self):
+    """def create_remote_start_transaction_task(self):
         self._hass.async_create_task(self.update_ha_entities())
 
     # overridden
     def create_remote_stop_transaction_task(self):
-        self._hass.async_create_task(self.update_ha_entities())
+        self._hass.async_create_task(self.update_ha_entities())"""
 
     # overridden
     async def force_smart_charging(self):
@@ -422,7 +467,9 @@ class HomeAssistantChargePointV201(ChargingStationV201, HomeAssistantEntityMetri
 
     # overridden
     async def add_evses(self, number_of_evses):
+        OcppLog.log_d(f"Aggiunta degli EVSE lato ChargeAdvisor.")
         await super().add_evses(number_of_evses)
+        OcppLog.log_d(f"Aggiunta degli EVSE come entità lato integrazione HA.")
         await self.add_ha_entities()
 
     # overridden
@@ -435,6 +482,7 @@ class HomeAssistantChargePointV201(ChargingStationV201, HomeAssistantEntityMetri
 
     # overridden
     async def add_evse(self, evse_id):
+        OcppLog(f"Versione sovraccaricata di add_evse.")
         dr = device_registry.async_get(self._hass)
         evse = await super().add_evse(evse_id)
         # Create Charge Point's EVSE Devices
@@ -442,10 +490,20 @@ class HomeAssistantChargePointV201(ChargingStationV201, HomeAssistantEntityMetri
             config_entry_id=self._config_entry.entry_id,
             identifiers={(DOMAIN, evse.identifier)},
             name=evse.identifier,
-            default_model=self.model + " EVSE",
+            model=self.model + " EVSE",
             via_device=(DOMAIN, self.id),
             manufacturer=self.vendor
         )
+        OcppLog.log_w(f"EVSE aggiunto correttamente al registro dispositivi.")
+        OcppLog.log_w(f"Creazione EVSE integrato...")
+        ha_evse = HomeAssistantEVSE(
+            id=str(evse_id),
+            hass=self._hass,
+            config_entry=self._config_entry,
+            charge_point=self
+        )
+        OcppLog.log_w(f"EVSE integrato creato correttamente.")
+        return ha_evse
 
     # overridden
     def get_auth_id_tag(self, id_tag: str):
@@ -512,3 +570,8 @@ class HomeAssistantChargePointV201(ChargingStationV201, HomeAssistantEntityMetri
         self._status = STATE_OK
         await super().reconnect(connection)
 
+    @on(Action.NotifyReport)
+    def on_notify_report(self, request_id, generated_at, tbc, seq_no, report_data, **kwargs):
+        OcppLog.log_w(f"Handler Notify Report sovraccaricato in azione.")
+        super().on_notify_report(request_id, generated_at, tbc, seq_no, report_data, **kwargs)
+        OcppLog.log_w(f"EVSE aggiunti dall'handler della superclasse: {self.evses}")
