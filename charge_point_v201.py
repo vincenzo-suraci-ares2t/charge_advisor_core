@@ -300,18 +300,28 @@ class HomeAssistantChargePointV201(ChargingStationV201, HomeAssistantEntityMetri
                 # source: https://github.com/home-assistant/core/blob/dev/homeassistant/helpers/entity_registry.py
                 # source: https://dev-docs.home-assistant.io/en/dev/api/helpers.html#module-homeassistant.helpers.entity_registry
                 # OcppLog.log_d(f"La entità {cp_ent.unique_id} è registrata in Home Assistant ma non è stata configurata dalla integrazione: verrà eliminata.")
-                er.async_remove(cp_ent.entity_id)
+                er.async_remove(
+                    entity_id=cp_ent.entity_id
+                )
             else:
-                await entity_component.async_update_entity(self._hass, cp_ent.entity_id)
+                await entity_component.async_update_entity(
+                    hass=self._hass,
+                    entity_id=cp_ent.entity_id
+                )
         for evse in self._evses:
             OcppLog.log_w(f"HA-EVSE in esame: {evse}.")
             ev_dev = dr.async_get_device({(DOMAIN, evse.id)})
             OcppLog.log_w(f"Device EVSE associato: {ev_dev}.")
             for ev_ent in entity_registry.async_entries_for_device(er, ev_dev.id):
                 if ev_ent.unique_id not in self.ha_entity_unique_ids:
-                    er.async_remove(ev_ent.entity_id)
+                    er.async_remove(
+                        entity_id=ev_ent.entity_id
+                    )
                 else:
-                    await entity_component.async_update_entity(self._hass, ev_ent.entity_id)
+                    await entity_component.async_update_entity(
+                        hass=self._hass,
+                        entity_id=ev_ent.entity_id
+                    )
 
         self._updating_entities = False
 
@@ -573,5 +583,6 @@ class HomeAssistantChargePointV201(ChargingStationV201, HomeAssistantEntityMetri
     @on(Action.NotifyReport)
     def on_notify_report(self, request_id, generated_at, tbc, seq_no, report_data, **kwargs):
         OcppLog.log_w(f"Handler Notify Report sovraccaricato in azione.")
-        super().on_notify_report(request_id, generated_at, tbc, seq_no, report_data, **kwargs)
+        res = super().on_notify_report(request_id, generated_at, tbc, seq_no, report_data, **kwargs)
         OcppLog.log_w(f"EVSE aggiunti dall'handler della superclasse: {self.evses}")
+        return res
