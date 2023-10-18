@@ -114,15 +114,15 @@ class HomeAssistantEVSE(EVSE, HomeAssistantEntityMetrics):
         # Lista di entità Home Assistant registrate in fase di setup
         self.ha_entity_unique_ids: list[str] = []
 
-        # Instantiate an OCPP ChargePoint
+        # Istanziare la superclasse e le metriche.
         EVSE.__init__(self, charge_point, id)
         HomeAssistantEntityMetrics.__init__(self)
 
         # Impostiamo le metriche
         self.set_metric_value(HAEVSESensors.identifier.value, id)
 
-        # Lista di connettori
-        self._connectors: list[HomeAssistantConnectorV201] = []
+        # Lista dei connettori integrati.
+        self._ha_connectors: list[HomeAssistantConnectorV201] = []
 
     # ------------------------------------------------------------------------------------------------------------------
     # HOME ASSISTANT METHODS
@@ -183,15 +183,15 @@ class HomeAssistantEVSE(EVSE, HomeAssistantEntityMetrics):
     # overridden
     def add_connector(self, connector_id = None):
         # Creazione del dispositivo connettore.
+        conn = super().add_connector(connector_id)
         OcppLog.log_w(f"Aggiunta connettore al registro dispositivi...")
         dr = device_registry.async_get(self._hass)
-        conn = super().add_connector(connector_id)
         dr.async_get_or_create(
             config_entry_id=self._config_entry.entry_id,
             identifiers={(DOMAIN, conn.identifier)},
             name=str(self._charge_point.id) + '_' + conn.identifier,
             model=self._charge_point.model + " Connector",
-            via_device=(DOMAIN, self.id),
+            via_device=(DOMAIN, self.identifier),
             manufacturer=self._charge_point.vendor
         )
         OcppLog.log_w(f"Creazione di un connettore integrato...")
@@ -204,6 +204,9 @@ class HomeAssistantEVSE(EVSE, HomeAssistantEntityMetrics):
             evse_id=self.id
         )
         OcppLog.log_w(f"Connettore integrato creato: {ha_conn}.")
+        self._ha_connectors.append(ha_conn)
+        OcppLog.log_w(f"Lista dei connettori integrati: {self._ha_connectors}")
+
         return ha_conn
 
     # overridden

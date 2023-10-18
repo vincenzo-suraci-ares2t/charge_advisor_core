@@ -295,6 +295,7 @@ class HomeAssistantChargePointV201(ChargingStationV201, HomeAssistantEntityMetri
         # OcppLog.log_d(f"Registro entità: {er.entities}.")
         identifiers = {(DOMAIN, self.id)}
         cp_dev = dr.async_get_device(identifiers)
+        OcppLog.log_w(f"Aggiornamento dei Charge Point...")
         for cp_ent in entity_registry.async_entries_for_device(er, cp_dev.id):
             if cp_ent.unique_id not in self.ha_entity_unique_ids:
                 # source: https://github.com/home-assistant/core/blob/dev/homeassistant/helpers/entity_registry.py
@@ -308,6 +309,9 @@ class HomeAssistantChargePointV201(ChargingStationV201, HomeAssistantEntityMetri
                     hass=self._hass,
                     entity_id=cp_ent.entity_id
                 )
+        OcppLog.log_w(f"Charge Point aggiornati.")
+        OcppLog.log_w(f"Aggiornamento degli EVSE...")
+        OcppLog.log_w(f"EVSE disponibili da aggiornare: {self.evses}.")
         for evse in self._evses:
             OcppLog.log_w(f"HA-EVSE in esame: {evse}.")
             ev_dev = dr.async_get_device({(DOMAIN, evse.id)})
@@ -322,6 +326,7 @@ class HomeAssistantChargePointV201(ChargingStationV201, HomeAssistantEntityMetri
                         hass=self._hass,
                         entity_id=ev_ent.entity_id
                     )
+        OcppLog.log_w(f"EVSE aggiornati.")
 
         self._updating_entities = False
 
@@ -513,6 +518,9 @@ class HomeAssistantChargePointV201(ChargingStationV201, HomeAssistantEntityMetri
             charge_point=self
         )
         OcppLog.log_w(f"EVSE integrato creato correttamente.")
+
+        await self.add_ha_entities()
+
         return ha_evse
 
     # overridden
