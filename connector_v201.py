@@ -39,7 +39,9 @@ class HomeAssistantConnectorV201(Connector, HomeAssistantEntityMetrics):
             self,
             hass,
             charge_point,
-            connector_id = 0,
+            config_entry,
+            evse_id,
+            connector_id = 0
     ):
 
         self._hass = hass
@@ -53,8 +55,16 @@ class HomeAssistantConnectorV201(Connector, HomeAssistantEntityMetrics):
         # Lista di entità Home Assistant registrate in fase di setup
         self.ha_entity_unique_ids: list[str] = []
 
-        Connector.__init__(self, charge_point, connector_id)
+        self._config_entry = config_entry
+
+        self._charge_point = charge_point
+
+        Connector.__init__(self, connector_id, evse_id)
         HomeAssistantEntityMetrics.__init__(self)
+
+    @property
+    def identifier(self):
+        return self._charge_point.id + '_' + str(self.evse_id) + '_' + str(self.connector_id)
 
     # ------------------------------------------------------------------------------------------------------------------
     # Overridden Methods
