@@ -276,6 +276,10 @@ class HomeAssistantChargePointV201(ChargingStationV201, HomeAssistantEntityMetri
     # HOME ASSISTANT METHODS
     # ------------------------------------------------------------------------------------------------------------------
 
+    async def add_new_entities(self):
+        await self.add_ha_entities()
+
+
     # Updates the Charge Point Home Assistant Entities and
     # its EVSE Home Assistant Entities
     async def update_ha_entities(self):

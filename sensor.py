@@ -5,7 +5,9 @@
 # ----------------------------------------------------------------------------------------------------------------------
 
 from __future__ import annotations
-from dataclasses import dataclass
+
+import traceback
+from dataclasses import dataclass, field
 from typing import Final
 from datetime import timedelta
 
@@ -44,6 +46,8 @@ from .const import *
 from .enums import *
 from .logger import OcppLog
 
+from ocpp_central_system.ComponentsV201.enums_v201 import TierLevel
+
 SCAN_INTERVAL = timedelta(seconds=DEFAULT_METER_INTERVAL)
 
 # Questo insieme contiene gli stati del connettore che rendono i sensori dipsonibili nella plancia di HA
@@ -62,10 +66,14 @@ class OcppSensorDescription(SensorEntityDescription):
     scale: int = 1  # used for rounding metric
     metric_key: str | None = None
     connector_id: int | None = None
+    evse_id: int | None = None
     availability_set: list | None = None
+    extra_attributes: dict | None =  field(default_factory=dict)
 
 
 class OcppSensor:
+
+
 
     @staticmethod
     def get_charge_point_entities(hass, charge_point: ChargePoint):
@@ -114,7 +122,9 @@ class OcppSensor:
                             availability_set=CONNECTOR_CHARGING_SESSION_SENSORS_AVAILABILTY_SET,
                         )
                     )
+                OcppLog.log_e(traceback.format_exc())
                 for metric_key in charge_point.measurands:
+                    OcppLog.log_e(f"Adding measurand .....{metric_key}")
                     sensors.append(
                         OcppSensorDescription(
                             key=metric_key.lower(),
@@ -125,22 +135,69 @@ class OcppSensor:
                         )
                     )
         elif charge_point.connection_ocpp_version == SubProtocol.OcppV201.value:
-            pass
+
+            def create_sensors_from_include_components(include_components_obj, sensors):
+                components_list = include_components_obj.componentsList
+
+                for component_name in components_list:
+
+                    component = include_components_obj.get_component(component_name)
+                    name = component.name
+                    instance = component.istance if component.istance is not None else ""
+
+                    for variable in list(component.get_variables().values()):
+                        variable_name = variable.name
+                        variable_instance = variable.instance if variable.instance is not None else ""
+
+                        metric_key = f"{name}.{instance}.{variable_name}.{variable_instance}.Actual"
+                        OcppLog.log_e(f"Adding metric sensor {metric_key.replace('..', '.')}")
+                        metric_key = metric_key.replace("..", ".")
+
+                        match component._component_tier.tier_level:
+                            case TierLevel.ChargingStation:
+                                connector_id = None
+                                evse_id = None
+                            case TierLevel.EVSE:
+                                connector_id = None
+                                evse_id = component._component_tier.evse_id
+                            case TierLevel.Connector:
+                                connector_id = component._component_tier.connector_id
+                                evse_id = component._component_tier.evse_id
+                            case _:
+                                connector_id = None
+                                evse_id = None
+
+                        sensors.append(
+                            OcppSensorDescription(
+                                key=metric_key.lower(),
+                                name=metric_key.replace(".", " "),
+                                metric_key=metric_key,
+                                connector_id=connector_id,
+                                evse_id=evse_id,
+                            )
+                        )
+            create_sensors_from_include_components(charge_point, sensors)
+
+            for evse in charge_point.evses:
+                OcppLog.log_e(f"Adding evseeeee {evse}")
+                create_sensors_from_include_components(evse, sensors)
+                for connector in evse.connectors:
+                    create_sensors_from_include_components(connector, sensors)
 
         entities = []
 
-        for sensor in sensors:
-            if sensor.connector_id is None:
-                entities.append(
-                    ChargePointMetric(
-                        hass,
-                        central_system,
-                        charge_point,
-                        sensor
+        if charge_point.connection_ocpp_version == SubProtocol.OcppV16.value:
+            for sensor in sensors:
+                if sensor.connector_id is None:
+                    entities.append(
+                        ChargePointMetric(
+                            hass,
+                            central_system,
+                            charge_point,
+                            sensor
+                        )
                     )
-                )
-            else:
-                if charge_point.connection_ocpp_version == SubProtocol.OcppV16.value:
+                else:
                     connector = charge_point.get_connector_by_id(sensor.connector_id)
                     entities.append(
                         ChargePointConnectorMetric(
@@ -151,10 +208,45 @@ class OcppSensor:
                             sensor
                         )
                     )
-                elif charge_point.connection_ocpp_version == SubProtocol.OcppV201.value:
-                    pass
+        elif charge_point.connection_ocpp_version == SubProtocol.OcppV201.value:
+            for sensor in sensors:
+                connector_id = sensor.connector_id
+                evse_id = sensor.evse_id
 
-        return entities
+                if connector_id is None and evse_id is None:
+                    entities.append(
+                        ChargePointMetric(
+                            hass,
+                            central_system,
+                            charge_point,
+                            sensor
+                        )
+                    )
+                elif evse_id is not None and connector_id is None:
+                    evse = charge_point.get_evse_by_id(evse_id)
+                    entities.append(
+                        EVSEConnectorMetric(
+                            hass,
+                            central_system,
+                            charge_point,
+                            evse,
+                            sensor
+                        )
+                    )
+                elif evse_id is not None and connector_id is None:
+                    evse = charge_point.get_evse_by_id(evse_id)
+                    connector = evse.get_connector_by_id(connector_id)
+                    entities.append(
+                        ChargePointConnectorMetric(
+                            hass,
+                            central_system,
+                            charge_point,
+                            connector,
+                            sensor,
+                            evse
+                        )
+                    )
+            return entities
 
 
 #  Static Sensor Platform entities registration done at CONFIG TIME (not at RUNTIME)
@@ -198,7 +290,7 @@ class ChargePointMetric(RestoreSensor, SensorEntity):
         self._charge_point = charge_point
         self.entity_description = description
         self._hass = hass
-        self._extra_attr = {}
+        self._extra_attr = self.entity_description.extra_attributes
         self._last_reset = homeassistant.util.dt.utc_from_timestamp(0)
         self._attr_unique_id = ".".join([
             SENSOR_DOMAIN,
@@ -395,6 +487,7 @@ class ChargePointConnectorMetric(ChargePointMetric):
             str(self._connector.id),
             self.entity_description.key
         ])
+        self._extra_attr = self.entity_description.extra_attributes
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._connector.identifier)},
             via_device=(DOMAIN, self._evse.id if evse is not None else charge_point),
@@ -437,6 +530,7 @@ class EVSEConnectorMetric(ChargePointMetric):
             str(self._evse.id),
             self.entity_description.key
         ])
+        self._extra_attr = self.entity_description.extra_attributes
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._evse.identifier)},
             via_device=(DOMAIN, self._charge_point.id),

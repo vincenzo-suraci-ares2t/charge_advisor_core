@@ -89,7 +89,7 @@ CHARGE_POINT_SWITCHES: Final = [
 CHARGE_POINT_CONNECTOR_SWITCHES: Final = [
     OcppSwitchDescription(
         key="charge_control",
-        name="Charge Controlll",
+        name="Charge Control",
         icon=ICON,
         on_action_service_name=HAChargePointServices.service_charge_start.name,
         off_action_service_name=HAChargePointServices.service_charge_stop.name,
@@ -104,7 +104,7 @@ CHARGE_POINT_CONNECTOR_SWITCHES: Final = [
     ),
     OcppSwitchDescription(
         key="availability",
-        name="Availabilityyy",
+        name="Availability",
         icon=ICON,
         on_action_service_name=HAChargePointServices.service_availability.name,
         off_action_service_name=HAChargePointServices.service_availability.name,
@@ -117,11 +117,6 @@ CHARGE_POINT_CONNECTOR_SWITCHES: Final = [
 ]
 
 CHARGE_POINT_EVSE_SWITCHES: Final = [
-    OcppSwitchDescription(
-        key="provisional_switch",
-        name="Provisional Switch"
-    ),
-
     OcppSwitchDescription(
         key="charge_control",
         name="Charge Control",
@@ -147,7 +142,7 @@ CHARGE_POINT_EVSE_SWITCHES: Final = [
         metric_condition=[
             AvailabilityType.operative.value
         ],
-        default_state=AvailabilityType.operative.value,
+        default_state=AvailabilityType.inoperative.value,
     ),
 ]
 
