@@ -73,8 +73,6 @@ class OcppSensorDescription(SensorEntityDescription):
 
 class OcppSensor:
 
-
-
     @staticmethod
     def get_charge_point_entities(hass, charge_point: ChargePoint):
 
@@ -143,39 +141,47 @@ class OcppSensor:
 
                     component = include_components_obj.get_component(component_name)
                     name = component.name
-                    instance = component.istance if component.istance is not None else ""
+                    instance = component.instance if component.instance is not None else ""
 
-                    for variable in list(component.get_variables().values()):
-                        variable_name = variable.name
-                        variable_instance = variable.instance if variable.instance is not None else ""
+                    for variable in list(component.get_variables()):
+                        # OcppLog.log_w(f"Istanze di variabile in esame in esame: {variable} - {component._variables.get(variable)}.")
+                        OcppLog.log_w(f"Numero di istanze trovate: {component.number_of_variable_instances(variable)}.")
 
-                        metric_key = f"{name}.{instance}.{variable_name}.{variable_instance}.Actual"
-                        OcppLog.log_e(f"Adding metric sensor {metric_key.replace('..', '.')}")
-                        metric_key = metric_key.replace("..", ".")
+                        for i in range(0, component.number_of_variable_instances(variable)):
+                            OcppLog.log_w(f"Istanza numero {i}.")
+                            instance = component.get_variable(variable, i)
+                            OcppLog.log_w(f"Istanza di {variable} per il componente {component_name}: {instance}.")
 
-                        match component._component_tier.tier_level:
-                            case TierLevel.ChargingStation:
-                                connector_id = None
-                                evse_id = None
-                            case TierLevel.EVSE:
-                                connector_id = None
-                                evse_id = component._component_tier.evse_id
-                            case TierLevel.Connector:
-                                connector_id = component._component_tier.connector_id
-                                evse_id = component._component_tier.evse_id
-                            case _:
-                                connector_id = None
-                                evse_id = None
+                            variable_name = instance.name
+                            variable_instance = variable.instance if variable.instance is not None else ""
 
-                        sensors.append(
-                            OcppSensorDescription(
-                                key=metric_key.lower(),
-                                name=metric_key.replace(".", " "),
-                                metric_key=metric_key,
-                                connector_id=connector_id,
-                                evse_id=evse_id,
+                            metric_key = f"{name}.{instance}.{variable_name}.{variable_instance}.Actual"
+                            OcppLog.log_e(f"Adding metric sensor {metric_key.replace('..', '.')}")
+                            metric_key = metric_key.replace("..", ".")
+
+                            match component._component_tier.tier_level:
+                                case TierLevel.ChargingStation:
+                                    connector_id = None
+                                    evse_id = None
+                                case TierLevel.EVSE:
+                                    connector_id = None
+                                    evse_id = component._component_tier.evse_id
+                                case TierLevel.Connector:
+                                    connector_id = component._component_tier.connector_id
+                                    evse_id = component._component_tier.evse_id
+                                case _:
+                                    connector_id = None
+                                    evse_id = None
+
+                            sensors.append(
+                                OcppSensorDescription(
+                                    key=metric_key.lower(),
+                                    name=metric_key.replace(".", " "),
+                                    metric_key=metric_key,
+                                    connector_id=connector_id,
+                                    evse_id=evse_id,
+                                )
                             )
-                        )
             create_sensors_from_include_components(charge_point, sensors)
 
             for evse in charge_point.evses:
