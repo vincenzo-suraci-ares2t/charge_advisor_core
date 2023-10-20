@@ -136,26 +136,29 @@ class OcppSensor:
 
             def create_sensors_from_include_components(include_components_obj, sensors):
                 components_list = include_components_obj.componentsList
-
+                OcppLog.log_e(f"Lista dei components... {components_list}")
                 for component_name in components_list:
 
                     component = include_components_obj.get_component(component_name)
-                    name = component.name
-                    instance = component.instance if component.instance is not None else ""
+                    component_name = component.name
+                    component_instance = component.instance if component.instance is not None else ""
 
-                    for variable in list(component.get_variables()):
+                    OcppLog.log_e(f"Variables in component {component_name}, are {list(component.get_variables())}")
+                    for variable_name in list(component.get_variables()):
                         # OcppLog.log_w(f"Istanze di variabile in esame in esame: {variable} - {component._variables.get(variable)}.")
-                        OcppLog.log_w(f"Numero di istanze trovate: {component.number_of_variable_instances(variable)}.")
+                        OcppLog.log_w(
+                            f"Numero di istanze trovate: {component.number_of_variable_instances(variable_name)}.")
 
-                        for i in range(0, component.number_of_variable_instances(variable)):
+                        for i in range(0, component.number_of_variable_instances(variable_name)):
                             OcppLog.log_w(f"Istanza numero {i}.")
-                            instance = component.get_variable(variable, i)
-                            OcppLog.log_w(f"Istanza di {variable} per il componente {component_name}: {instance}.")
+                            variable = component.get_variable(variable_name, i)
 
-                            variable_name = instance.name
                             variable_instance = variable.instance if variable.instance is not None else ""
 
-                            metric_key = f"{name}.{instance}.{variable_name}.{variable_instance}.Actual"
+                            OcppLog.log_w(
+                                f"Istanza di {variable} per il componente {component_name}: {variable.instance}.")
+
+                            metric_key = f"{component_name}.{component_instance}.{variable_name}.{variable_instance}.Actual"
                             OcppLog.log_e(f"Adding metric sensor {metric_key.replace('..', '.')}")
                             metric_key = metric_key.replace("..", ".")
 
@@ -258,7 +261,6 @@ class OcppSensor:
 #  Static Sensor Platform entities registration done at CONFIG TIME (not at RUNTIME)
 # A workaround to do it at runtime: https://community.home-assistant.io/t/adding-entities-at-runtime/200855/2
 async def async_setup_entry(hass, entry, async_add_devices):
-
     # Configure the sensor platform
     central_system: CentralSystem = hass.data[DOMAIN][entry.entry_id]
 
