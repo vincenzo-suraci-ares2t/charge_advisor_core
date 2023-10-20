@@ -318,7 +318,7 @@ class HomeAssistantChargePointV201(ChargingStationV201, HomeAssistantEntityMetri
         OcppLog.log_w(f"EVSE disponibili da aggiornare: {self.evses}.")
         for evse in self._evses:
             OcppLog.log_w(f"HA-EVSE in esame: {evse}.")
-            ev_dev = dr.async_get_device({(DOMAIN, evse.id)})
+            ev_dev = dr.async_get_device({(DOMAIN, evse.identifier)})
             OcppLog.log_w(f"Device EVSE associato: {ev_dev}.")
             for ev_ent in entity_registry.async_entries_for_device(er, ev_dev.id):
                 if ev_ent.unique_id not in self.ha_entity_unique_ids:

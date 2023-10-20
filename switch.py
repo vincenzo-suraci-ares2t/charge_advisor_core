@@ -179,7 +179,8 @@ async def async_setup_entry(hass, entry, async_add_devices):
                         )
                     )
         # Altrimenti, se la versione usata è la 2.0.1...
-        elif charge_point.connection_ocpp_version == SubProtocol.OcppV201.value:
+        # elif charge_point.connection_ocpp_version == SubProtocol.OcppV201.value:
+        else:
             # Scorrere gli switch per gli EVSE del Charge Point e aggiungerli alle entità.
             OcppLog.log_i(f"Versione protocollo OCPP: 2.0.1.")
             OcppLog.log_i(f"EVSE disponibili: {charge_point.evses}.")
@@ -187,21 +188,31 @@ async def async_setup_entry(hass, entry, async_add_devices):
             for evse in charge_point.evses:
                 OcppLog.log_i(f"EVSE in esame: {evse}.")
                 # Per ogni tipo di switch da aggiungere all'EVSE...
-                OcppLog.log_w(f"Descrizioni di switch disponibili per gli EVSE: {CHARGE_POINT_EVSE_SWITCHES}")
+                # OcppLog.log_w(f"Descrizioni di switch disponibili per gli EVSE: {CHARGE_POINT_EVSE_SWITCHES}")
                 for desc in CHARGE_POINT_EVSE_SWITCHES:
-                    OcppLog.log_w(f"Descrizione switch in esame: {desc}")
+                    OcppLog.log_w(f"Nome switch in esame: {desc.name}. Per EVSE {evse.id} con identificatore {evse.identifier}.")
                     # Inserire lo switch tra le entità dell'EVSE, usando la descrizione fornita dalla lista
                     # CHARGE_POINT_EVSE_SWITCHES per creare un oggetto di tipo EVSESwitchEntity.
                     OcppLog.log_w(f"Inserimento switch EVSE...")
                     entities.append(
                         EVSESwitchEntity(
-                            central_system,
                             charge_point,
                             evse,
                             desc
                         )
                     )
-                    OcppLog.log_w(f"Inserimento completato.")
+                    # Aggiungere gli switch dei connettori relativi all'EVSE in esame.
+                    """for connector in evse.connectors:
+                        # NOTA: il modello per gli switch è temporaneamente lo stesso di quello degli EVSE.
+                        for conn_desc in CHARGE_POINT_EVSE_SWITCHES:
+                            entities.append(
+                                EVSEConnectorSwitchEntity(
+                                    charge_point,
+                                    evse,
+                                    connector,
+                                    conn_desc
+                                )
+                            )"""
 
     OcppLog.log_w(f"Entità switch aggiunte: {entities}.")
     # Aggiungiamo gli unique_id di ogni entità registrata in fase di setup al
@@ -210,6 +221,7 @@ async def async_setup_entry(hass, entry, async_add_devices):
         entity.append_entity_unique_id()
 
     async_add_devices(entities, False)
+    OcppLog.log_w(f"Inserimento terminato.")
 
 class CentralSystemSwitchEntity(SwitchEntity):
     _attr_has_entity_name = True
@@ -412,35 +424,35 @@ class ChargePointConnectorSwitchEntity(ChargePointSwitchEntity):
 
 class EVSESwitchEntity(SwitchEntity):
 
-
     _attr_has_entity_name = True
     entity_description: OcppSwitchDescription
 
     def __init__(
-        self,
-        central_system: CentralSystem,
-        charge_point: ChargePoint,
-        evse: EVSE,
-        description: OcppSwitchDescription,
+            self,
+            charge_point: ChargePoint,
+            evse: EVSE,
+            description: OcppSwitchDescription,
     ):
-        super().__init__(central_system, charge_point, description)
+        self._charge_point = charge_point
         self._evse = evse
+        self.entity_description = description
+        self._state = self.entity_description.default_state
         self._attr_unique_id = ".".join([
             SWITCH_DOMAIN,
             DOMAIN,
-            charge_point.id,
-            str(self._evse.id),
+            self._evse.identifier,
             self.entity_description.key
-            ])
+        ])
+        self._attr_name = self.entity_description.name
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._evse.identifier)},
-            via_device=(DOMAIN, charge_point.id),
+            via_device=(DOMAIN, self._charge_point.id),
         )
-        OcppLog.log_w(f"EVSE switch entity inserita correttamente.")
+        # OcppLog.log_d(f"{self._attr_unique_id} switch created!")
 
     @property
     def target(self):
-        return self._charge_point
+        return self._evse
 
     @property
     def available(self) -> bool:
@@ -498,3 +510,33 @@ class EVSESwitchEntity(SwitchEntity):
     def append_entity_unique_id(self):
         if self.unique_id not in self.target.ha_entity_unique_ids:
             self.target.ha_entity_unique_ids.append(self.unique_id)
+
+"""class EVSEConnectorSwitchEntity(EVSESwitchEntity):
+
+    _attr_has_entity_name = True
+    entity_description: OcppSwitchDescription
+
+    def __init__(
+        self,
+        charge_point: ChargePoint,
+        evse: EVSE,
+        connector: Connector,
+        description: OcppSwitchDescription
+    ):
+        super().__init__(charge_point, evse, description)
+        self._connector = connector
+        self._attr_unique_id = ".".join([
+            SWITCH_DOMAIN,
+            DOMAIN,
+            self._evse.identifier,
+            str(self._connector.identifier),
+            self.entity_description.key
+            ])
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._connector.identifier)},
+            via_device=(DOMAIN, self._evse.identifier),
+        )
+
+    @property
+    def target(self):
+        return self._connector"""
