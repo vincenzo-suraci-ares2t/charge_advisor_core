@@ -147,14 +147,15 @@ class OcppSensor:
                     for variable_name in list(component.get_variables()):
                         # OcppLog.log_w(f"Istanze di variabile in esame in esame: {variable} - {component._variables.get(variable)}.")
                         OcppLog.log_w(
-                            f"Numero di istanze trovate: {component.number_of_variable_instances(variable_name)}.")
+                            f"{variable_name}: Numero di istanze trovate: {component.number_of_variable_instances(variable_name)} nome delle istance: {list(component.get_variable_instances(variable_name))}")
 
                         for i in range(0, component.number_of_variable_instances(variable_name)):
-                            OcppLog.log_w(f"Istanza numero {i}.")
+
                             variable = component.get_variable(variable_name, i)
 
                             variable_instance = variable.instance if variable.instance is not None else ""
 
+                            OcppLog.log_w(f"Istanza numero {i}, come identificativo: {variable_instance}")
                             OcppLog.log_w(
                                 f"Istanza di {variable} per il componente {component_name}: {variable.instance}.")
 
