@@ -202,17 +202,17 @@ async def async_setup_entry(hass, entry, async_add_devices):
                         )
                     )
                     # Aggiungere gli switch dei connettori relativi all'EVSE in esame.
-                    """for connector in evse.connectors:
+                    for connector in evse._ha_connectors:
                         # NOTA: il modello per gli switch è temporaneamente lo stesso di quello degli EVSE.
+                        OcppLog.log_w(f"Connector in esame: {connector}.")
                         for conn_desc in CHARGE_POINT_EVSE_SWITCHES:
                             entities.append(
                                 EVSEConnectorSwitchEntity(
-                                    charge_point,
                                     evse,
                                     connector,
                                     conn_desc
                                 )
-                            )"""
+                            )
 
     OcppLog.log_w(f"Entità switch aggiunte: {entities}.")
     # Aggiungiamo gli unique_id di ogni entità registrata in fase di setup al
@@ -511,20 +511,21 @@ class EVSESwitchEntity(SwitchEntity):
         if self.unique_id not in self.target.ha_entity_unique_ids:
             self.target.ha_entity_unique_ids.append(self.unique_id)
 
-"""class EVSEConnectorSwitchEntity(EVSESwitchEntity):
+class EVSEConnectorSwitchEntity(SwitchEntity):
 
     _attr_has_entity_name = True
     entity_description: OcppSwitchDescription
 
     def __init__(
         self,
-        charge_point: ChargePoint,
         evse: EVSE,
         connector: Connector,
         description: OcppSwitchDescription
     ):
-        super().__init__(charge_point, evse, description)
+        # super().__init__(charge_point, evse, description)
+        self._evse = evse
         self._connector = connector
+        self.entity_description = description
         self._attr_unique_id = ".".join([
             SWITCH_DOMAIN,
             DOMAIN,
@@ -536,7 +537,12 @@ class EVSESwitchEntity(SwitchEntity):
             identifiers={(DOMAIN, self._connector.identifier)},
             via_device=(DOMAIN, self._evse.identifier),
         )
+        OcppLog.log_w(f"TIPO CONNECTOR: {type(self.target)}.")
 
     @property
     def target(self):
-        return self._connector"""
+        return self._connector
+
+    def append_entity_unique_id(self):
+        if self.unique_id not in self.target.ha_entity_unique_ids:
+            self.target.ha_entity_unique_ids.append(self.unique_id)
