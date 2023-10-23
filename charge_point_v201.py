@@ -15,7 +15,7 @@ import asyncio
 import voluptuous as vol
 
 from ocpp.exceptions import NotImplementedError
-from ocpp.v201.enums import Action
+from ocpp.v201.enums import Action, AttributeType
 from ocpp.routing import on
 
 # from .ocpp_central_system.ocpp_central_system.enums import Profiles
@@ -34,6 +34,7 @@ import homeassistant.helpers.config_validation as cv
 # ----------------------------------------------------------------------------------------------------------------------
 
 from ocpp_central_system.ComponentsV201.charging_station_2_0_1 import ChargingStationV201
+from ocpp_central_system.ComponentsV201.enums_v201 import TierLevel
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Local files
