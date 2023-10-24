@@ -245,7 +245,7 @@ class HomeAssistantChargePointV201(ChargingStationV201, HomeAssistantEntityMetri
                     TRANS_SERVICE_DATA_SCHEMA,
                 )
 
-                if Profiles.SMART in self.attr_supported_features:
+                """if Profiles.SMART in self.attr_supported_features:
                     self._hass.services.async_register(
                         DOMAIN,
                         HAChargePointServices.service_clear_profile.value,
@@ -266,7 +266,8 @@ class HomeAssistantChargePointV201(ChargingStationV201, HomeAssistantEntityMetri
                         GDIAG_SERVICE_DATA_SCHEMA,
                     )
 
-                    self.post_connect_success = True
+                    self.post_connect_success = True"""
+                self.post_connect_success = True
 
         except NotImplementedError as e:
             OcppLog.log_e(f"Configuration of the charger failed: {e}")
