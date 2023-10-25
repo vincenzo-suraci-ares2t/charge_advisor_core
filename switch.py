@@ -158,7 +158,7 @@ EVSE_CONNECTOR_SWITCHES: Final = [
             AvailabilityType.operative.value
         ],
         default_state=AvailabilityType.inoperative.value,
-    ),
+    )
 ]
 
 
@@ -175,6 +175,7 @@ async def async_setup_entry(hass, entry, async_add_devices):
         # Recuperare il Charge Point vero e proprio.
         charge_point = central_system.charge_points[cp_id]
         OcppLog.log_w(f"CHARGE POINT IN ESAME: {charge_point}.")
+        OcppLog.log_w(f"Tipo del charge point in esame: {type(charge_point)}.")
         # Per ogni switch da aggiungere al Charge Point.
         for desc in CHARGE_POINT_SWITCHES:
             # Creare un oggetto di tipo ChargePointSwitchEntity sulla base della descrizione che si trova nella
@@ -202,8 +203,9 @@ async def async_setup_entry(hass, entry, async_add_devices):
             OcppLog.log_i(f"EVSE disponibili: {charge_point.evses}.")
             # Per ogni EVSE...
             for evse in charge_point.evses:
-                OcppLog.log_i(f"EVSE in esame: {evse}.")
-                # Per ogni tipo di switch da aggiungere all'EVSE...
+                OcppLog.log_w(f"EVSE in esame: {evse}.")
+                OcppLog.log_w(f"Tipo dell'EVSE in esame: {type(evse)}.")
+                # Per ogni switch da aggiungere all'EVSE...
                 # OcppLog.log_w(f"Descrizioni di switch disponibili per gli EVSE: {CHARGE_POINT_EVSE_SWITCHES}")
                 for desc in CHARGE_POINT_EVSE_SWITCHES:
                     OcppLog.log_w(f"Nome switch in esame: {desc.name}. Per EVSE {evse.id} con identificatore {evse.identifier}.")
@@ -265,6 +267,9 @@ class CentralSystemSwitchEntity(SwitchEntity):
             identifiers={(DOMAIN, self._central_system.id)}
         )
         # OcppLog.log_d(f"{self._attr_unique_id} switch created!")
+        OcppLog.log_w(f"Central system ID: {self._central_system.id}.")
+        OcppLog.log_w(f"Tipo central system in esame: {type(self._central_system)}.")
+        OcppLog.log_w(f"Central System attr_unique_id: {self._attr_unique_id}.")
 
     @property
     def target(self):
@@ -469,7 +474,9 @@ class EVSESwitchEntity(ChargePointSwitchEntity):
             identifiers={(DOMAIN, self._evse.identifier)},
             via_device=(DOMAIN, self._charge_point.id),
         )
-        # OcppLog.log_d(f"{self._attr_unique_id} switch created!")
+        OcppLog.log_w(f"EVSE VIA DEVICE: ({DOMAIN}, {self._charge_point.id}).")
+        OcppLog.log_w(f"EVSE ID attr_unique_id: {self._attr_unique_id}.")
+        OcppLog.log_w(f"EVSE description key: {self.entity_description.key}.")
 
     @property
     def target(self):
@@ -553,7 +560,8 @@ class EVSEConnectorSwitchEntity(EVSESwitchEntity):
             SWITCH_DOMAIN,
             DOMAIN,
             self._charge_point.id,
-            str(self._connector.connector_id),
+            self._evse.identifier,
+            str(self._connector.identifier),
             self.entity_description.key
             ])
         self._attr_device_info = DeviceInfo(
@@ -561,7 +569,9 @@ class EVSEConnectorSwitchEntity(EVSESwitchEntity):
             via_device=(DOMAIN, self._evse.identifier),
         )
         OcppLog.log_w(f"TIPO CONNECTOR: {type(self.target)}.")
-        OcppLog.log_w(f"VIA DEVICE: ({DOMAIN}, {self._evse.identifier}).")
+        OcppLog.log_w(f"Connector VIA DEVICE: ({DOMAIN}, {self._evse.identifier}).")
+        OcppLog.log_w(f"Connector ID attr_unique_id: {self._attr_unique_id}.")
+        OcppLog.log_w(f"Connector description key: {self.entity_description.key}.")
 
     @property
     def target(self):

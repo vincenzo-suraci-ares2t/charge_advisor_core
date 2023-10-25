@@ -299,7 +299,7 @@ class HomeAssistantChargePointV201(ChargingStationV201, HomeAssistantEntityMetri
         # Update sensors values in HA
         er = entity_registry.async_get(self._hass)
         dr = device_registry.async_get(self._hass)
-        # OcppLog.log_d(f"Registro dispositivi: {dr.devices}.")
+        OcppLog.log_d(f"REGISTRO DISPOSITIVI: {dr.devices}.")
         # OcppLog.log_d(f"Registro entità: {er.entities}.")
         identifiers = {(DOMAIN, self.id)}
         cp_dev = dr.async_get_device(identifiers)
@@ -411,7 +411,7 @@ class HomeAssistantChargePointV201(ChargingStationV201, HomeAssistantEntityMetri
             via_device=(DOMAIN, self.id),
             manufacturer=self.vendor
         )
-        OcppLog.log_w(f"EVSE aggiunto correttamente al registro dispositivi.")
+        OcppLog.log_w(f"EVSE di nome {evse.identifier} aggiunto correttamente al registro dispositivi.")
         OcppLog.log_w(f"Creazione EVSE integrato...")
         ha_evse = HomeAssistantEVSE(
             id=str(evse_id),
@@ -517,7 +517,7 @@ class HomeAssistantChargePointV201(ChargingStationV201, HomeAssistantEntityMetri
             via_device=(DOMAIN, self.id),
             manufacturer=self.vendor
         )
-        OcppLog.log_w(f"EVSE aggiunto correttamente al registro dispositivi.")
+        OcppLog.log_w(f"EVSE di nome {evse.identifier} aggiunto correttamente al registro dispositivi.")
         OcppLog.log_w(f"Creazione EVSE integrato...")
         ha_evse = HomeAssistantEVSE(
             id=str(evse_id),

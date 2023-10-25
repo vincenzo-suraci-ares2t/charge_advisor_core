@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 import asyncio
+from .logger import OcppLog
 
 # ----------------------------------------------------------------------------------------------------------------------
 # External packages
@@ -92,6 +93,8 @@ class HomeAssistantConnectorV201(Connector, HomeAssistantEntityMetrics):
     # Updates the Charge Point Home Assistant Entities and its Connectors Home Assistant Entities
     async def update_ha_entities(self):
 
+        OcppLog.log_w(f"Aggiornamento dell'entità connettore...")
+
         while self._adding_entities or self._updating_entities:
             await asyncio.sleep(1)
 
@@ -100,6 +103,7 @@ class HomeAssistantConnectorV201(Connector, HomeAssistantEntityMetrics):
         # Update sensors values in HA
         er = entity_registry.async_get(self._hass)
         dr = device_registry.async_get(self._hass)
+        OcppLog.log_w(f"Identificatore del connettore in esame: {self.identifier}.")
         identifiers = {(DOMAIN, self.identifier)}
         conn_dev = dr.async_get_device(identifiers)
         for conn_ent in entity_registry.async_entries_for_device(er, conn_dev.id):
@@ -112,3 +116,5 @@ class HomeAssistantConnectorV201(Connector, HomeAssistantEntityMetrics):
                 await entity_component.async_update_entity(self._hass, conn_ent.entity_id)
 
         self._updating_entities = False
+
+        OcppLog.log_w(f"Aggiornamento entità connettore terminata.")

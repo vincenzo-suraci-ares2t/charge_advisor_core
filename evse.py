@@ -153,6 +153,7 @@ class HomeAssistantEVSE(EVSE, HomeAssistantEntityMetrics):
                 # source: https://dev-docs.home-assistant.io/en/dev/api/helpers.html#module-homeassistant.helpers.entity_registry
                 # OcppLog.log_d(f"La entità {cp_ent.unique_id} è registrata in Home Assistant ma non è stata configurata dalla integrazione: verrà eliminata.")
                 er.async_remove(evse_ent.entity_id)
+                OcppLog.log_w(f"Entità EVSE non trovata, rimozione.")
             else:
                 await entity_component.async_update_entity(self._hass, evse_ent.entity_id)
         for conn in self._connectors:
@@ -188,13 +189,13 @@ class HomeAssistantEVSE(EVSE, HomeAssistantEntityMetrics):
         dr = device_registry.async_get(self._hass)
         dr.async_get_or_create(
             config_entry_id=self._config_entry.entry_id,
-            identifiers={(DOMAIN, conn.identifier)},
+            identifiers={(DOMAIN, str(self._charge_point.id) + '_' + conn.identifier)},
             name=str(self._charge_point.id) + '_' + conn.identifier,
             model=self._charge_point.model + " Connector",
             via_device=(DOMAIN, self.identifier),
             manufacturer=self._charge_point.vendor
         )
-        OcppLog.log_w(f"Creazione di un connettore integrato...")
+        OcppLog.log_w(f"Creazione di un connettore integrato di nome {str(self._charge_point.id) + '_' + conn.identifier}...")
         # Creazione del Connettore integrato.
         ha_conn = HomeAssistantConnectorV201(
             hass=self._hass,
