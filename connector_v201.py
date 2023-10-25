@@ -65,7 +65,7 @@ class HomeAssistantConnectorV201(Connector, HomeAssistantEntityMetrics):
 
     @property
     def identifier(self):
-        return self._charge_point.id + '_' + str(self.evse_id) + '_' + str(self.connector_id)
+         return self._charge_point.id + '_' + str(self.evse_id) + '_' + str(self.connector_id)
 
     # ------------------------------------------------------------------------------------------------------------------
     # Overridden Methods

@@ -173,19 +173,25 @@ class OcppSensor:
                                 case TierLevel.Connector:
                                     connector_id = component._component_tier.connector_id
                                     evse_id = component._component_tier.evse_id
+
+                                    OcppLog.log_d(f"Adding to Connector ID {connector_id} on EVSE {evse_id}")
                                 case _:
                                     connector_id = None
                                     evse_id = None
 
-                            sensors.append(
-                                OcppSensorDescription(
-                                    key=metric_key.lower(),
-                                    name=metric_key.replace(".", " "),
-                                    metric_key=metric_key,
-                                    connector_id=connector_id,
-                                    evse_id=evse_id,
+
+                            if "Ctrlr" not in component_name:
+                                sensors.append(
+                                    OcppSensorDescription(
+                                        key=metric_key.lower(),
+                                        #name=metric_key.replace(".", " "),
+                                        name=metric_key.split(".")[1],
+                                        metric_key=metric_key,
+                                        connector_id=connector_id,
+                                        evse_id=evse_id,
+                                        entity_category=EntityCategory.DIAGNOSTIC
+                                    )
                                 )
-                            )
             create_sensors_from_include_components(charge_point, sensors)
 
             for evse in charge_point.evses:
@@ -233,9 +239,9 @@ class OcppSensor:
                         )
                     )
                 elif evse_id is not None and connector_id is None:
-                    evse = charge_point.get_evse_by_id(evse_id)
+                    evse = charge_point.get_evse_by_id(int(evse_id))
                     entities.append(
-                        EVSEConnectorMetric(
+                        EVSEMetric(
                             hass,
                             central_system,
                             charge_point,
@@ -243,17 +249,17 @@ class OcppSensor:
                             sensor
                         )
                     )
-                elif evse_id is not None and connector_id is None:
-                    evse = charge_point.get_evse_by_id(evse_id)
-                    connector = evse.get_connector_by_id(connector_id)
+                elif evse_id is not None and connector_id is not None:
+                    evse = charge_point.get_evse_by_id(int(evse_id))
+                    connector = evse.get_connector_by_id(int(connector_id))
                     entities.append(
-                        ChargePointConnectorMetric(
+                        EVSEConnectorMetric(
                             hass,
                             central_system,
                             charge_point,
+                            evse,
                             connector,
                             sensor,
-                            evse
                         )
                     )
             return entities
@@ -483,8 +489,7 @@ class ChargePointConnectorMetric(ChargePointMetric):
         central_system: CentralSystem,
         charge_point: ChargePoint,
         connector: Connector,
-        description: OcppSensorDescription,
-        evse: EVSE = None,
+        description: OcppSensorDescription
     ):
         super().__init__(hass, central_system, charge_point, description)
         self._evse = evse
@@ -499,7 +504,7 @@ class ChargePointConnectorMetric(ChargePointMetric):
         self._extra_attr = self.entity_description.extra_attributes
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._connector.identifier)},
-            via_device=(DOMAIN, self._evse.id if evse is not None else charge_point),
+            via_device=(DOMAIN, charge_point),
         )
 
         # OcppLog.log_d(f"Adding {self._attr_unique_id} entity")
@@ -520,7 +525,8 @@ class ChargePointConnectorMetric(ChargePointMetric):
             available = super().available
         return available
 
-class EVSEConnectorMetric(ChargePointMetric):
+
+class EVSEMetric(ChargePointMetric):
 
     def __init__(
         self,
@@ -542,7 +548,7 @@ class EVSEConnectorMetric(ChargePointMetric):
         self._extra_attr = self.entity_description.extra_attributes
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._evse.identifier)},
-            via_device=(DOMAIN, self._charge_point.id),
+            #via_device=(DOMAIN, self._charge_point.id),
         )
 
         # OcppLog.log_d(f"Adding {self._attr_unique_id} entity")
@@ -557,6 +563,54 @@ class EVSEConnectorMetric(ChargePointMetric):
         available = False
         if self.entity_description.availability_set is not None:
             value = self._evse.get_metric_value(HAEVSESensors.status.value)
+            if value in self.entity_description.availability_set:
+                available = super().available
+        else:
+            available = super().available
+        return available
+
+class EVSEConnectorMetric(EVSEMetric):
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        central_system: CentralSystem,
+        charge_point: ChargePoint,
+        evse: EVSE,
+        connector: Connector,
+        description: OcppSensorDescription,
+
+    ):
+        super().__init__(hass, central_system, charge_point, evse, description)
+        self._evse = evse
+        self._connector = connector
+        self._attr_unique_id = ".".join([
+            SENSOR_DOMAIN,
+            DOMAIN,
+            self._charge_point.id,
+            str(self._evse.evse_id),
+            str(self._connector.connector_id),
+            self.entity_description.key
+        ])
+        OcppLog.log_e(f"Adding Connector sensor {self._attr_unique_id} with identifier {self._connector.identifier} !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+        self._extra_attr = self.entity_description.extra_attributes
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._connector.identifier)},
+            #via_device=(DOMAIN, self._evse.evse_id),
+        )
+
+        # OcppLog.log_d(f"Adding {self._attr_unique_id} entity")
+
+    @property
+    def target(self):
+        return self._connector
+
+    @property
+    def available(self) -> bool:
+        # Return if sensor is available
+        available = False
+        if self.entity_description.availability_set is not None:
+            value = self._connector.get_metric_value(HAConnectorSensors.status.value)
             if value in self.entity_description.availability_set:
                 available = super().available
         else:

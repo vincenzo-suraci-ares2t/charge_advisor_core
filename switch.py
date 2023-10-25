@@ -221,7 +221,7 @@ async def async_setup_entry(hass, entry, async_add_devices):
                         )
                     )
                     # Aggiungere gli switch dei connettori relativi all'EVSE in esame.
-                    for connector in evse._ha_connectors:
+                    for connector in evse.connectors:
                         OcppLog.log_w(f"Connector in esame: {connector}.")
                         for conn_desc in EVSE_CONNECTOR_SWITCHES:
                             OcppLog.log_w(f"Descrizione switch per connector: {conn_desc}.")
@@ -472,7 +472,7 @@ class EVSESwitchEntity(ChargePointSwitchEntity):
         self._attr_name = self.entity_description.name
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._evse.identifier)},
-            via_device=(DOMAIN, self._charge_point.id),
+            #via_device=(DOMAIN, self._charge_point.id),
         )
         OcppLog.log_w(f"EVSE VIA DEVICE: ({DOMAIN}, {self._charge_point.id}).")
         OcppLog.log_w(f"EVSE ID attr_unique_id: {self._attr_unique_id}.")
@@ -566,7 +566,7 @@ class EVSEConnectorSwitchEntity(EVSESwitchEntity):
             ])
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._connector.identifier)},
-            via_device=(DOMAIN, self._evse.identifier),
+            #via_device=(DOMAIN, self._evse.identifier),
         )
         OcppLog.log_w(f"TIPO CONNECTOR: {type(self.target)}.")
         OcppLog.log_w(f"Connector VIA DEVICE: ({DOMAIN}, {self._evse.identifier}).")

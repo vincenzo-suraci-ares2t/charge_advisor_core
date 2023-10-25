@@ -121,8 +121,6 @@ class HomeAssistantEVSE(EVSE, HomeAssistantEntityMetrics):
         # Impostiamo le metriche
         self.set_metric_value(HAEVSESensors.identifier.value, id)
 
-        # Lista dei connettori integrati.
-        self._ha_connectors: list[HomeAssistantConnectorV201] = []
 
     # ------------------------------------------------------------------------------------------------------------------
     # HOME ASSISTANT METHODS
@@ -164,6 +162,7 @@ class HomeAssistantEVSE(EVSE, HomeAssistantEntityMetrics):
     def is_available(self):
         return self._status == STATE_OK
 
+
     # ------------------------------------------------------------------------------------------------------------------
     # Event Loop Tasks
     # ------------------------------------------------------------------------------------------------------------------
@@ -184,7 +183,7 @@ class HomeAssistantEVSE(EVSE, HomeAssistantEntityMetrics):
     # overridden
     def add_connector(self, connector_id = None):
         # Creazione del dispositivo connettore.
-        conn = super().add_connector(connector_id)
+        conn = self.create_connector_instance(connector_id)
         OcppLog.log_w(f"Aggiunta connettore al registro dispositivi...")
         dr = device_registry.async_get(self._hass)
         dr.async_get_or_create(
@@ -205,8 +204,7 @@ class HomeAssistantEVSE(EVSE, HomeAssistantEntityMetrics):
             evse_id=self.id
         )
         OcppLog.log_w(f"Connettore integrato creato: {ha_conn}.")
-        self._ha_connectors.append(ha_conn)
-        OcppLog.log_w(f"Lista dei connettori integrati: {self._ha_connectors}")
+        self._connectors.append(ha_conn)
 
         return ha_conn
 
