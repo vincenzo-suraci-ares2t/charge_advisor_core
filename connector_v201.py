@@ -104,6 +104,7 @@ class HomeAssistantConnectorV201(Connector, HomeAssistantEntityMetrics):
         er = entity_registry.async_get(self._hass)
         dr = device_registry.async_get(self._hass)
         OcppLog.log_w(f"Identificatore del connettore in esame: {self.identifier}.")
+        OcppLog.log_w(f"Aggiornamento entità del connettore.")
         identifiers = {(DOMAIN, self.identifier)}
         conn_dev = dr.async_get_device(identifiers)
         for conn_ent in entity_registry.async_entries_for_device(er, conn_dev.id):

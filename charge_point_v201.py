@@ -299,16 +299,18 @@ class HomeAssistantChargePointV201(ChargingStationV201, HomeAssistantEntityMetri
         # Update sensors values in HA
         er = entity_registry.async_get(self._hass)
         dr = device_registry.async_get(self._hass)
-        OcppLog.log_d(f"REGISTRO DISPOSITIVI: {dr.devices}.")
+        # OcppLog.log_d(f"REGISTRO DISPOSITIVI: {dr.devices}.")
         # OcppLog.log_d(f"Registro entità: {er.entities}.")
         identifiers = {(DOMAIN, self.id)}
         cp_dev = dr.async_get_device(identifiers)
         OcppLog.log_w(f"Aggiornamento dei Charge Point...")
+        OcppLog.log_w(f"Entità registrate nel Charge Point: {self.ha_entity_unique_ids}.")
         for cp_ent in entity_registry.async_entries_for_device(er, cp_dev.id):
             if cp_ent.unique_id not in self.ha_entity_unique_ids:
                 # source: https://github.com/home-assistant/core/blob/dev/homeassistant/helpers/entity_registry.py
                 # source: https://dev-docs.home-assistant.io/en/dev/api/helpers.html#module-homeassistant.helpers.entity_registry
                 # OcppLog.log_d(f"La entità {cp_ent.unique_id} è registrata in Home Assistant ma non è stata configurata dalla integrazione: verrà eliminata.")
+                OcppLog.log_w(f"Entità {cp_ent.unique_id} associata al Charge Point non trovata, rimozione...")
                 er.async_remove(
                     entity_id=cp_ent.entity_id
                 )
@@ -322,10 +324,11 @@ class HomeAssistantChargePointV201(ChargingStationV201, HomeAssistantEntityMetri
         OcppLog.log_w(f"EVSE disponibili da aggiornare: {self.evses}.")
         for evse in self._evses:
             OcppLog.log_w(f"HA-EVSE in esame: {evse}.")
+            OcppLog.log_w(f"Entità registrate nell'EVSE in esame: {evse.ha_entity_unique_ids}.")
             ev_dev = dr.async_get_device({(DOMAIN, evse.identifier)})
-            OcppLog.log_w(f"Device EVSE associato: {ev_dev}.")
+            # OcppLog.log_w(f"Device EVSE associato: {ev_dev}.")
             for ev_ent in entity_registry.async_entries_for_device(er, ev_dev.id):
-                if ev_ent.unique_id not in self.ha_entity_unique_ids:
+                if ev_ent.unique_id not in evse.ha_entity_unique_ids:
                     er.async_remove(
                         entity_id=ev_ent.entity_id
                     )
@@ -334,6 +337,10 @@ class HomeAssistantChargePointV201(ChargingStationV201, HomeAssistantEntityMetri
                         hass=self._hass,
                         entity_id=ev_ent.entity_id
                     )
+            OcppLog.log_w(f"Aggiornamento connettori associati all'EVSE {evse.id}.")
+            for conn in evse.connectors:
+                await conn.update_ha_entities()
+            OcppLog.log_w(f"Connettori aggiornati.")
         OcppLog.log_w(f"EVSE aggiornati.")
 
         self._updating_entities = False
@@ -592,9 +599,11 @@ class HomeAssistantChargePointV201(ChargingStationV201, HomeAssistantEntityMetri
 
     # overridden
     async def reconnect(self, connection):
+        OcppLog.log_w(f"INIZIO RECONNECT INTEGRATO...")
         # Indichiamo lo stato Home Assistant di nuovo disponibile
         self._status = STATE_OK
         await super().reconnect(connection)
+        OcppLog.log_w(f"RECONNECT INTEGRATO CONCLUSO.")
 
     @on(Action.NotifyReport)
     def on_notify_report(self, request_id, generated_at, tbc, seq_no, report_data, **kwargs):

@@ -240,6 +240,8 @@ async def async_setup_entry(hass, entry, async_add_devices):
     # Charge Point o al Connector
     for entity in entities:
         entity.append_entity_unique_id()
+        OcppLog.log_w(f"Entità aggiunta e suo ID: {entity.name}, {entity.entity_id}.")
+        OcppLog.log_w(f"Tipo entità aggiunta: {type(entity)}.")
 
     async_add_devices(entities, False)
     OcppLog.log_w(f"Inserimento terminato.")
@@ -576,6 +578,33 @@ class EVSEConnectorSwitchEntity(EVSESwitchEntity):
     @property
     def target(self):
         return self._connector
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        OcppLog.log_w(f"SWITCH CONNECTOR TURN OFF")
+        OcppLog.log_w(f"self.entity_description.off_action_Service_name: {self.entity_description.off_action_service_name}.")
+        # Turn the switch off.
+        """Response is True if successful but State is False"""
+        if self.entity_description.off_action_service_name is None:
+            resp = True
+        elif self.entity_description.off_action_service_name == self.entity_description.on_action_service_name:
+            resp = await self.target.call_ha_service(
+                service_name=self.entity_description.off_action_service_name,
+                state=False
+            )
+        else:
+            resp = await self.target.call_ha_service(
+                service_name=self.entity_description.off_action_service_name,
+            )
+        self._state = not resp
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        OcppLog.log_w(f"SWITCH CONNECTOR TURN ON")
+        OcppLog.log_w(f"self.entity_description.on_action_Service_name: {self.entity_description.on_action_service_name}.")
+        # Turn the switch on.
+        self._state = await self.target.call_ha_service(
+            service_name=self.entity_description.on_action_service_name,
+            state=True
+        )
 
     def append_entity_unique_id(self):
         if self.unique_id not in self.target.ha_entity_unique_ids:

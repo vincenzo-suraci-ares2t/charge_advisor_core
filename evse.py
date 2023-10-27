@@ -144,6 +144,7 @@ class HomeAssistantEVSE(EVSE, HomeAssistantEntityMetrics):
         identifiers = {(DOMAIN, self.id)}
         OcppLog.log_d(f"Identificatori EVSE: {identifiers}.")
         evse_dev = dr.async_get_device(identifiers)
+        OcppLog.log_w(f"Entità registrate nell'EVSE: {self.ha_entity_unique_ids}.")
         for evse_ent in entity_registry.async_entries_for_device(er, evse_dev.id):
             OcppLog.log_d(f"Entità EVSE in esame: {evse_ent}")
             if evse_ent.unique_id not in self.ha_entity_unique_ids:
@@ -151,10 +152,11 @@ class HomeAssistantEVSE(EVSE, HomeAssistantEntityMetrics):
                 # source: https://dev-docs.home-assistant.io/en/dev/api/helpers.html#module-homeassistant.helpers.entity_registry
                 # OcppLog.log_d(f"La entità {cp_ent.unique_id} è registrata in Home Assistant ma non è stata configurata dalla integrazione: verrà eliminata.")
                 er.async_remove(evse_ent.entity_id)
-                OcppLog.log_w(f"Entità EVSE non trovata, rimozione.")
+                OcppLog.log_w(f"Entità associata all'EVSE non trovata, rimozione...")
             else:
                 await entity_component.async_update_entity(self._hass, evse_ent.entity_id)
         for conn in self._connectors:
+            OcppLog.log_w(f"Tipo di connettore associato all'EVSE: {type(conn)}.")
             await conn.update_ha_entities()
 
         self._updating_entities = False
@@ -204,6 +206,7 @@ class HomeAssistantEVSE(EVSE, HomeAssistantEntityMetrics):
             evse_id=self.id
         )
         OcppLog.log_w(f"Connettore integrato creato: {ha_conn}.")
+        OcppLog.log_w(f"Entità registrate nell'EVSE: {self.ha_entity_unique_ids}.")
         self._connectors.append(ha_conn)
 
         return ha_conn
