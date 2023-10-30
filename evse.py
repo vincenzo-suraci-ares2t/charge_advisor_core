@@ -268,12 +268,31 @@ class HomeAssistantEVSE(EVSE, HomeAssistantEntityMetrics):
     async def call_ha_service(
             self,
             service_name: str,
-            state: bool = True
+            state: bool = True,
+            connector_id: int = None
     ):
+        match service_name:
+            case HAChargePointServices.service_availability.name:
+                if connector_id is not None:
+                    conn = self._connectors[connector_id-1]
+                    OcppLog.log_w(f"ID del connettore recuperato: {conn.connector_id}")
+                    OcppLog.log_w(f"Tipo del connettore recuperato: {type(conn)}.")
+                    ##############################
+                    for c in conn._components_list:
+                        OcppLog.log_w(f"Chiave: {c} - Valore: {conn._components_list.get(c)}")
+                        for i in conn._components_list.get(c):
+                            OcppLog.log_w(f"Nome: {i.name} - Istanza: {i.instance}.")
+                    ##############################
+                    comp_conn = conn.get_component("Connector", "0")
+                    OcppLog.log_w(f"Componente connector recuperata: {comp_conn}.")
+                    availability = comp_conn.get_variable("Available")
+                    OcppLog.log_w(f"Disponibilità connettore: {availability}")
+                    return
+
         return await self._charge_point.call_ha_service(
             service_name=service_name,
             state=state,
-            connector_id=self._connector_id,
+            evse_id=self.evse_id,
             transaction_id=self.active_transaction_id
         )
 
