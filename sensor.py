@@ -192,11 +192,46 @@ class OcppSensor:
                                     )
             create_sensors_from_include_components(charge_point, sensors)
 
+            def ctrate_sensors_from_tier_level(tier_level, sensors):
+
+                match tier_level.tier_level:
+                    case TierLevel.ChargingStation:
+                        connector_id = None
+                        evse_id = None
+                    case TierLevel.EVSE:
+                        connector_id = None
+                        evse_id = tier_level.evse_id
+                    case TierLevel.Connector:
+                        connector_id = tier_level.connector_id
+                        evse_id = tier_level.evse_id
+
+                        OcppLog.log_d(f"Adding to Connector ID {connector_id} on EVSE {evse_id}")
+                    case _:
+                        connector_id = None
+                        evse_id = None
+
+                for metric_key in tier_level.measurands_list:
+                    OcppLog.log_e(f"Adding measurand .....{metric_key}")
+                    sensors.append(
+                        OcppSensorDescription(
+                            key=metric_key.lower(),
+                            name=metric_key.replace(".", " "),
+                            metric_key=metric_key,
+                            connector_id=connector_id,
+                            evse_id=evse_id,
+                            availability_set=CONNECTOR_CHARGING_SESSION_SENSORS_AVAILABILTY_SET,
+                        )
+                    )
+
             for evse in charge_point.evses:
                 OcppLog.log_e(f"Adding evseeeee {evse}")
                 create_sensors_from_include_components(evse, sensors)
                 for connector in evse.connectors:
                     create_sensors_from_include_components(connector, sensors)
+
+
+
+
 
         entities = []
 
