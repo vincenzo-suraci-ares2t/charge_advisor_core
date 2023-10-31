@@ -83,11 +83,13 @@ class HomeAssistantConnectorV201(Connector, HomeAssistantEntityMetrics):
             service_name: str,
             state: bool = True
     ):
-        return await self._charge_point.call_ha_service(
+        evse = self._charge_point.get_evse_by_id(int(super().evse_id))
+
+        return await evse.call_ha_service(
             service_name=service_name,
             state=state,
             connector_id=self._connector_id,
-            transaction_id=self.active_transaction_id
+            # transaction_id=self.active_transaction_id
         )
 
     # Updates the Charge Point Home Assistant Entities and its Connectors Home Assistant Entities
