@@ -69,6 +69,7 @@ class OcppSensorDescription(SensorEntityDescription):
     evse_id: int | None = None
     availability_set: list | None = None
     extra_attributes: dict | None =  field(default_factory=dict)
+    visible_by_default: bool | None = False
 
 
 class OcppSensor:
@@ -190,9 +191,8 @@ class OcppSensor:
                                             entity_category=EntityCategory.DIAGNOSTIC
                                         )
                                     )
-            create_sensors_from_include_components(charge_point, sensors)
 
-            def ctrate_sensors_from_tier_level(tier_level, sensors):
+            def create_sensors_from_tier_level(tier_level, sensors):
 
                 match tier_level.tier_level:
                     case TierLevel.ChargingStation:
@@ -223,11 +223,16 @@ class OcppSensor:
                         )
                     )
 
+            create_sensors_from_include_components(charge_point, sensors)
+            create_sensors_from_tier_level(charge_point, sensors)
+
             for evse in charge_point.evses:
                 OcppLog.log_e(f"Adding evseeeee {evse}")
                 create_sensors_from_include_components(evse, sensors)
+                create_sensors_from_tier_level(evse, sensors)
                 for connector in evse.connectors:
                     create_sensors_from_include_components(connector, sensors)
+                    create_sensors_from_tier_level(connector, sensors)
 
 
 
@@ -353,10 +358,15 @@ class ChargePointMetric(RestoreSensor, SensorEntity):
         )
         self._attr_native_unit_of_measurement = None
         self._attr_native_value = None
+        self._visible_by_default = self.entity_description.visible_by_default
 
     @property
     def target(self):
         return self._charge_point
+
+    @property
+    def entity_registry_visible_default(self):
+        return True
 
     @property
     def _metric_key(self):
