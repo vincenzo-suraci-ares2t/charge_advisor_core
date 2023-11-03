@@ -83,12 +83,12 @@ class HomeAssistantConnectorV201(Connector, HomeAssistantEntityMetrics):
             service_name: str,
             state: bool = True
     ):
-        evse = self._charge_point.get_evse_by_id(int(super().evse_id))
+        evse = self._charge_point.get_evse_by_id(int(self.evse_id))
 
         return await evse.call_ha_service(
             service_name=service_name,
             state=state,
-            connector_id=self._connector_id,
+            connector_id=self._connector_id
             # transaction_id=self.active_transaction_id
         )
 

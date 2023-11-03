@@ -153,7 +153,7 @@ EVSE_CONNECTOR_SWITCHES: Final = [
         icon=ICON,
         on_action_service_name=HAChargePointServices.service_availability.name,
         off_action_service_name=HAChargePointServices.service_availability.name,
-        metric_key=HAEVSESensors.availability.value,
+        metric_key=HAConnectorSensors.availability.value,
         metric_condition=[
             AvailabilityType.operative.value
         ],

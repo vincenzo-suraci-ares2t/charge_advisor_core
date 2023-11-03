@@ -358,8 +358,7 @@ class HomeAssistantChargePointV201(ChargingStationV201, HomeAssistantEntityMetri
             service_name: str,
             state: bool = True,
             evse_id: int | None = 0,
-            transaction_id: int | None = None,
-            connector_id: int | None = None
+            transaction_id: int | None = None
     ):
         # Carry out requested service/state change on connected charger.
         resp = False
