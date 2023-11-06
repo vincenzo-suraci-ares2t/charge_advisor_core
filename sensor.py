@@ -230,6 +230,16 @@ class OcppSensor:
                 OcppLog.log_e(f"Adding evseeeee {evse}")
                 create_sensors_from_include_components(evse, sensors)
                 create_sensors_from_tier_level(evse, sensors)
+                for metric_key in list(HAConnectorChargingSessionSensors):
+                    sensors.append(
+                        OcppSensorDescription(
+                            key=metric_key.lower(),
+                            name=metric_key.replace(".", " "),
+                            metric_key=metric_key,
+                            evse_id=evse.evse_id,
+                            availability_set=CONNECTOR_CHARGING_SESSION_SENSORS_AVAILABILTY_SET,
+                        )
+                    )
                 for connector in evse.connectors:
                     create_sensors_from_include_components(connector, sensors)
                     create_sensors_from_tier_level(connector, sensors)
