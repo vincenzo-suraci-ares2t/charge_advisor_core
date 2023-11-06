@@ -289,10 +289,12 @@ class HomeAssistantEVSE(EVSE, HomeAssistantEntityMetrics):
                 if connector_id is not None:
                     return await self.set_availability(state=state, connector_id=connector_id)
 
+        OcppLog.log_w(f"ID transazione corrente (se esiste): {self._active_transaction_id}.")
         return await self._charge_point.call_ha_service(
             service_name=service_name,
             state=state,
-            evse_id=self.evse_id
+            evse_id=self.evse_id,
+            transaction_id=self._active_transaction_id
         )
 
     async def set_availability(self, state: bool, connector_id: int = None):
