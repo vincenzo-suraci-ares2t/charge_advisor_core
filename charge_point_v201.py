@@ -366,7 +366,8 @@ class HomeAssistantChargePointV201(ChargingStationV201, HomeAssistantEntityMetri
             case HAChargePointServices.service_availability.name:
                 resp = await self.set_availability(state, int(evse_id))
             case HAChargePointServices.service_charge_start.name:
-                resp = await self.remote_start_transaction(evse_id)
+                # resp = await self.remote_start_transaction(evse_id)
+                resp = await self.start_transaction_request(1)
             case HAChargePointServices.service_charge_stop.name:
                 resp = await self.remote_stop_transaction(transaction_id)
             case HAChargePointServices.service_reset.name:
