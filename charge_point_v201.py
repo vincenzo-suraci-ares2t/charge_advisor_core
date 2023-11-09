@@ -358,13 +358,14 @@ class HomeAssistantChargePointV201(ChargingStationV201, HomeAssistantEntityMetri
             service_name: str,
             state: bool = True,
             evse_id: int | None = 0,
+            connector_id: int = 0,
             transaction_id: int | None = None
     ):
         # Carry out requested service/state change on connected charger.
         resp = False
         match service_name:
             case HAChargePointServices.service_availability.name:
-                resp = await self.set_availability(state, int(evse_id))
+                resp = await self.set_availability(state, int(evse_id), connector_id)
             case HAChargePointServices.service_charge_start.name:
                 resp = await self.start_transaction_request(evse_id=1)
             case HAChargePointServices.service_charge_stop.name:

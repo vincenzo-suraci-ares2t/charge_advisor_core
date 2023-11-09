@@ -278,54 +278,23 @@ class HomeAssistantEVSE(EVSE, HomeAssistantEntityMetrics):
     def is_available(self):
         return self._charge_point.is_available()
 
+    ####################################################################################################################
+    # Metodo per gestire le istruzioni ricevute dall'interfaccia grafica.
     async def call_ha_service(
             self,
             service_name: str,
             state: bool = True,
             connector_id: int = None
     ):
-        match service_name:
+        """match service_name:
             case HAChargePointServices.service_availability.name:
                 if connector_id is not None:
-                    return await self.set_availability(state=state, connector_id=connector_id)
-
-        OcppLog.log_w(f"ID transazione corrente (se esiste): {self._active_transaction_id}.")
+                    return await self.set_availability(state=state, connector_id=connector_id)"""
         return await self._charge_point.call_ha_service(
             service_name=service_name,
             state=state,
             evse_id=self.evse_id,
+            connector_id=connector_id,
             transaction_id=self._active_transaction_id
         )
-
-    async def set_availability(self, state: bool, connector_id: int = None):
-
-        OcppLog.log_w(f"Inizio esecuzione set_availability da evse.py...")
-
-        if state is True:
-            typ = OperationalStatusType.operative.value
-        else:
-            typ = OperationalStatusType.inoperative.value
-
-        req = call.ChangeAvailabilityPayload(operational_status=typ, evse={'id': int(self.id), 'connector_id': connector_id})
-        resp = await self.charge_point.call(req)
-        OcppLog.log_d(f"Risposta alla richiesta di cambio dell'availability del connettore: {resp}.")
-
-        if resp.status == ChangeAvailabilityStatusType.accepted:
-            # Il cambio di disponibilità è stato accettato
-            # In base al valore del flag state, impostiamo il valore della disponibilità in Home Assistant
-            # state = True >>> availability_status = OperationalStatusType.operative
-            # state = False >>> availability_status = OperationalStatusType.inoperative
-            availability_type = OperationalStatusType.operative.value if state else OperationalStatusType.inoperative.value
-            conn = self.get_connector_by_id(connector_id)
-            OcppLog.log_w(f"Vecchio valore della disponibilità: {conn.get_metric_value(ConnectorStatus.availability.value)}.")
-            OcppLog.log_w(f"Cambio della disponibilità in {typ}...")
-            conn.set_metric_value(ConnectorStatus.availability.value, availability_type)
-            OcppLog.log_w(f"Nuovo valore della disponibilità: {conn.get_metric_value(ConnectorStatus.availability.value)}.")
-            return True
-        else:
-            OcppLog.log_w(f"Failed with response: {resp.status}")
-            await self.notify(
-                f"Warning: Set availability failed with response {resp.status}"
-            )
-            return False
-
+    ####################################################################################################################

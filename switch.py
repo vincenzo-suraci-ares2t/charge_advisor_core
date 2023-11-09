@@ -25,7 +25,7 @@ from homeassistant.helpers.entity import DeviceInfo
 # ----------------------------------------------------------------------------------------------------------------------
 
 from ocpp.v16.enums import ChargePointStatus, Measurand, AvailabilityType
-# from ocpp_central_system.logger import OcppLog
+from ocpp.v201.enums import OperationalStatusType
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Local packages
@@ -55,6 +55,7 @@ Vengono aggiunti 2 switch:
 1) Availability > dovrebbe essere uno per ogni connettore!
 2) Charge_Control > dovrebbe essere uno per ogni connettore! 
 """
+# Switch della Central System.
 CENTRAL_SYSTEM_SWITCHES: Final = [
     OcppSwitchDescription(
         key="energy_control_communication",
@@ -70,7 +71,8 @@ CENTRAL_SYSTEM_SWITCHES: Final = [
     ),
 ]
 
-
+# Switch del Charge Point. Sono gli stessi per OCPP 1.6 e 2.0.1.
+# Nota: AvailabilityType è però un'enumerazione esclusiva di 1.6, il corrispettivo in 2.0.1 è OperationalStatusType.
 CHARGE_POINT_SWITCHES: Final = [
     OcppSwitchDescription(
         key="availability",
@@ -86,6 +88,7 @@ CHARGE_POINT_SWITCHES: Final = [
     ),
 ]
 
+# Switch dei connettori 1.6.
 CHARGE_POINT_CONNECTOR_SWITCHES: Final = [
     OcppSwitchDescription(
         key="charge_control",
@@ -116,6 +119,7 @@ CHARGE_POINT_CONNECTOR_SWITCHES: Final = [
     ),
 ]
 
+# Switch degli EVSE 2.0.1.
 CHARGE_POINT_EVSE_SWITCHES: Final = [
     OcppSwitchDescription(
         key="charge_control",
@@ -130,7 +134,7 @@ CHARGE_POINT_EVSE_SWITCHES: Final = [
             ChargePointStatus.suspended_evse.value,
             ChargePointStatus.suspended_ev.value,
         ],
-        default_state=True,
+        default_state=False,
     ),
     OcppSwitchDescription(
         key="availability",
@@ -140,12 +144,13 @@ CHARGE_POINT_EVSE_SWITCHES: Final = [
         off_action_service_name=HAChargePointServices.service_availability.name,
         metric_key=HAEVSESensors.availability.value,
         metric_condition=[
-            AvailabilityType.operative.value
+            OperationalStatusType.operative.value
         ],
-        default_state=AvailabilityType.inoperative.value,
+        default_state=OperationalStatusType.operative.value,
     ),
 ]
 
+# Switch dei connettori 2.0.1.
 EVSE_CONNECTOR_SWITCHES: Final = [
     OcppSwitchDescription(
         key="availability",
@@ -155,9 +160,9 @@ EVSE_CONNECTOR_SWITCHES: Final = [
         off_action_service_name=HAChargePointServices.service_availability.name,
         metric_key=HAConnectorSensors.availability.value,
         metric_condition=[
-            AvailabilityType.operative.value
+            OperationalStatusType.operative.value
         ],
-        default_state=AvailabilityType.inoperative.value,
+        default_state=OperationalStatusType.operative.value,
     )
 ]
 
