@@ -55,7 +55,7 @@ NUMBERS: Final = [
         key="maximum_current",
         name="Maximum Current",
         icon=ICON,
-        initial_value=DEFAULT_MAX_CURRENT,
+        initial_value=0,
         native_min_value=0,
         native_max_value=DEFAULT_MAX_CURRENT,
         native_step=1,
@@ -89,7 +89,12 @@ async def async_setup_entry(hass, entry, async_add_devices):
                         ent.native_max_value = entry.data.get(CONF_MAX_CURRENT, DEFAULT_MAX_CURRENT)
                     entities.append(ChargePointConnectorOcppNumber(hass, central_system, charge_point, connector, ent))
         elif charge_point.connection_ocpp_version == SubProtocol.OcppV201.value:
-            pass
+            for evse in charge_point.evses:
+                for ent in NUMBERS:
+                    if ent.key == "maximum_current":
+                        ent.initial_value = 0
+                        ent.native_max_value = entry.data.get(CONF_MAX_CURRENT, DEFAULT_MAX_CURRENT)
+                    entities.append(ChargePointConnectorOcppNumber(hass, central_system, charge_point, evse, ent))
 
     # Aggiungiamo gli unique_id di ogni entità registrata in fase di setup al
     # Charge Point o al Connector
@@ -209,3 +214,30 @@ class ChargePointConnectorOcppNumber(ChargePointOcppNumber):
     @property
     def target(self):
         return self._connector
+
+class ChargePointEVSEOcppNumber(ChargePointOcppNumber):
+
+    def __init__(
+            self,
+            hass: HomeAssistant,
+            central_system: CentralSystem,
+            charge_point: ChargePoint,
+            evse: EVSE,
+            description: OcppNumberDescription,
+    ):
+        super().__init__(hass, central_system, charge_point, description)
+        self._evse = evse
+        self._attr_unique_id = ".".join([
+            NUMBER_DOMAIN,
+            self._charge_point.id,
+            str(self._evse.id),
+            self.entity_description.key
+        ])
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._connector.identifier)},
+            via_device=(DOMAIN, self._charge_point.id),
+        )
+
+    @property
+    def target(self):
+        return self._evse

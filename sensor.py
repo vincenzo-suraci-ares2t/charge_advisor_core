@@ -33,6 +33,8 @@ from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 # ----------------------------------------------------------------------------------------------------------------------
 
 from ocpp.v16.enums import ChargePointStatus
+from ocpp.v201.enums import OperationalStatusType, ConnectorStatusType
+
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Local packages
@@ -58,6 +60,11 @@ CONNECTOR_CHARGING_SESSION_SENSORS_AVAILABILTY_SET: Final = [
     ChargePointStatus.suspended_evse.value,
     ChargePointStatus.suspended_ev.value,
 ]
+
+V201_CONNECTOR_CHARGING_SESSION_SENSORS_AVAILABILTY_SET: Final = [
+    ConnectorStatusType.occupied.value
+]
+
 
 @dataclass
 class OcppSensorDescription(SensorEntityDescription):
@@ -219,7 +226,7 @@ class OcppSensor:
                             metric_key=metric_key,
                             connector_id=connector_id,
                             evse_id=evse_id,
-                            availability_set=CONNECTOR_CHARGING_SESSION_SENSORS_AVAILABILTY_SET,
+                            availability_set=V201_CONNECTOR_CHARGING_SESSION_SENSORS_AVAILABILTY_SET,
                         )
                     )
 
@@ -238,7 +245,7 @@ class OcppSensor:
                             name=metric_key.replace(".", " "),
                             metric_key=metric_key,
                             evse_id=evse.evse_id,
-                            availability_set=CONNECTOR_CHARGING_SESSION_SENSORS_AVAILABILTY_SET,
+                            availability_set=V201_CONNECTOR_CHARGING_SESSION_SENSORS_AVAILABILTY_SET,
                         )
                     )
                 for connector in evse.connectors:
