@@ -25,7 +25,7 @@ from homeassistant.helpers.entity import DeviceInfo
 # ----------------------------------------------------------------------------------------------------------------------
 
 from ocpp.v16.enums import ChargePointStatus, Measurand, AvailabilityType
-from ocpp.v201.enums import OperationalStatusType
+from ocpp.v201.enums import OperationalStatusType, ConnectorStatusType
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Local packages
@@ -80,11 +80,13 @@ CHARGE_POINT_SWITCHES: Final = [
         icon=ICON,
         on_action_service_name=HAChargePointServices.service_availability.name, # service name (not value)
         off_action_service_name=HAChargePointServices.service_availability.name, # service name (not value)
-        metric_key=HAChargePointSensors.availability.value,
+        metric_key="ChargingStation.AvailabilityState",
         metric_condition=[
-            AvailabilityType.operative.value
+            ConnectorStatusType.available.value,
+            ConnectorStatusType.reserved.value,
+            ConnectorStatusType.occupied.value
         ],
-        default_state=AvailabilityType.inoperative.value,
+        default_state=False
     ),
 ]
 
@@ -127,12 +129,9 @@ CHARGE_POINT_EVSE_SWITCHES: Final = [
         icon=ICON,
         on_action_service_name=HAChargePointServices.service_charge_start.name,
         off_action_service_name=HAChargePointServices.service_charge_stop.name,
-        metric_key=HAEVSESensors.status.value,
+        metric_key="EVSE.AvailabilityState",
         metric_condition=[
-            ChargePointStatus.preparing.value,
-            ChargePointStatus.charging.value,
-            ChargePointStatus.suspended_evse.value,
-            ChargePointStatus.suspended_ev.value,
+            ConnectorStatusType.occupied.value
         ],
         default_state=False,
     ),
@@ -142,9 +141,11 @@ CHARGE_POINT_EVSE_SWITCHES: Final = [
         icon=ICON,
         on_action_service_name=HAChargePointServices.service_availability.name,
         off_action_service_name=HAChargePointServices.service_availability.name,
-        metric_key=HAEVSESensors.availability.value,
+        metric_key="EVSE.AvailabilityState",
         metric_condition=[
-            OperationalStatusType.operative.value
+            ConnectorStatusType.available.value,
+            ConnectorStatusType.reserved.value,
+            ConnectorStatusType.occupied.value
         ],
         default_state=OperationalStatusType.operative.value,
     ),
@@ -158,9 +159,11 @@ EVSE_CONNECTOR_SWITCHES: Final = [
         icon=ICON,
         on_action_service_name=HAChargePointServices.service_availability.name,
         off_action_service_name=HAChargePointServices.service_availability.name,
-        metric_key=HAConnectorSensors.availability.value,
+        metric_key="Connector.AvailabilityState",
         metric_condition=[
-            OperationalStatusType.operative.value
+            ConnectorStatusType.available.value,
+            ConnectorStatusType.reserved.value,
+            ConnectorStatusType.occupied.value
         ],
         default_state=OperationalStatusType.operative.value,
     )
@@ -366,8 +369,11 @@ class ChargePointSwitchEntity(SwitchEntity):
 
     @property
     def available(self) -> bool:
-        # Return if switch is available.
-        return self.target.is_available()
+        # Return if sensor is available.
+        if self.target.is_available is None:
+            return False
+        else:
+            return self.target.is_available
 
     @property
     def is_on(self) -> bool:
@@ -492,7 +498,7 @@ class EVSESwitchEntity(ChargePointSwitchEntity):
     @property
     def available(self) -> bool:
         # Return if switch is available.
-        return self.target.is_available()
+        return self.target.is_available
 
     @property
     def is_on(self) -> bool:
@@ -587,7 +593,7 @@ class EVSEConnectorSwitchEntity(EVSESwitchEntity):
     @property
     def available(self) -> bool:
         # Return if switch is available.
-        return self.target.is_available()
+        return self.target.is_available
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         OcppLog.log_w(f"SWITCH CONNECTOR TURN OFF")

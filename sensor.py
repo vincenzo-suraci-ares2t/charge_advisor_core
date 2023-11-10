@@ -394,7 +394,10 @@ class ChargePointMetric(RestoreSensor, SensorEntity):
     @property
     def available(self) -> bool:
         # Return if sensor is available.
-        return self.target.is_available()
+        if self.target.is_available is None:
+            return False
+        else:
+            return self.target.is_available
 
     @property
     def should_poll(self):
@@ -612,7 +615,6 @@ class EVSEMetric(ChargePointMetric):
 
     @property
     def available(self) -> bool:
-        OcppLog.log_e(f"22222222222222222222222222222222222222222")
 
         # Return if sensor is available
         available = False
@@ -662,7 +664,6 @@ class EVSEConnectorMetric(EVSEMetric):
 
     @property
     def available(self) -> bool:
-        OcppLog.log_e(f"33333333333333333333333333333333333333333")
 
         # Return if sensor is available
         available = False

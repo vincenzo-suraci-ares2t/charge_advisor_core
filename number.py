@@ -148,7 +148,10 @@ class ChargePointOcppNumber(RestoreNumber, NumberEntity):
     @property
     def available(self) -> bool:
         # Return if sensor is available.
-        return self.target.is_available()
+        if self.target.is_available is None:
+            return False
+        else:
+            return self.target.is_available
 
     @callback
     def _schedule_immediate_update(self):
