@@ -226,11 +226,12 @@ class OcppSensor:
             create_sensors_from_include_components(charge_point, sensors)
             create_sensors_from_tier_level(charge_point, sensors)
 
+            evse_sensors = set(list(V201HAConnectorChargingSessionSensors)) | set(list(HAConnectorChargingSessionSensors))
             for evse in charge_point.evses:
                 OcppLog.log_e(f"Adding evseeeee {evse}")
                 create_sensors_from_include_components(evse, sensors)
                 create_sensors_from_tier_level(evse, sensors)
-                for metric_key in list(HAConnectorChargingSessionSensors):
+                for metric_key in list(evse_sensors):
                     sensors.append(
                         OcppSensorDescription(
                             key=metric_key.lower(),
@@ -310,7 +311,7 @@ class OcppSensor:
                             sensor,
                         )
                     )
-            return entities
+        return entities
 
 
 #  Static Sensor Platform entities registration done at CONFIG TIME (not at RUNTIME)
@@ -545,7 +546,6 @@ class ChargePointConnectorMetric(ChargePointMetric):
         description: OcppSensorDescription
     ):
         super().__init__(hass, central_system, charge_point, description)
-        self._evse = evse
         self._connector = connector
         self._attr_unique_id = ".".join([
             SENSOR_DOMAIN,
@@ -612,10 +612,12 @@ class EVSEMetric(ChargePointMetric):
 
     @property
     def available(self) -> bool:
+        OcppLog.log_e(f"22222222222222222222222222222222222222222")
+
         # Return if sensor is available
         available = False
         if self.entity_description.availability_set is not None:
-            value = self._evse.get_metric_value(HAEVSESensors.status.value)
+            value = self._evse.get_metric_value("EVSE.AvailabilityState")
             if value in self.entity_description.availability_set:
                 available = super().available
         else:
@@ -660,10 +662,12 @@ class EVSEConnectorMetric(EVSEMetric):
 
     @property
     def available(self) -> bool:
+        OcppLog.log_e(f"33333333333333333333333333333333333333333")
+
         # Return if sensor is available
         available = False
         if self.entity_description.availability_set is not None:
-            value = self._connector.get_metric_value(HAConnectorSensors.status.value)
+            value = self._connector.get_metric_value("Connector.AvailabilityState")
             if value in self.entity_description.availability_set:
                 available = super().available
         else:

@@ -75,8 +75,8 @@ class HomeAssistantConnectorV201(Connector, HomeAssistantEntityMetrics):
     # Home Assistant Methods
     # ------------------------------------------------------------------------------------------------------------------
 
-    def is_available(self):
-        return self._charge_point.is_available()
+    #def is_available(self):
+    #    return self._charge_point.is_available()
 
     async def call_ha_service(
             self,

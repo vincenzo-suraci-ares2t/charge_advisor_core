@@ -584,6 +584,11 @@ class EVSEConnectorSwitchEntity(EVSESwitchEntity):
     def target(self):
         return self._connector
 
+    @property
+    def available(self) -> bool:
+        # Return if switch is available.
+        return self.target.is_available()
+
     async def async_turn_off(self, **kwargs: Any) -> None:
         OcppLog.log_w(f"SWITCH CONNECTOR TURN OFF")
         OcppLog.log_w(f"self.entity_description.off_action_Service_name: {self.entity_description.off_action_service_name}.")

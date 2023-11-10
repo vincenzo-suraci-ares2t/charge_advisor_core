@@ -172,8 +172,8 @@ class HomeAssistantEVSE(EVSE, HomeAssistantEntityMetrics):
 
         self._updating_entities = False
 
-    def is_available(self):
-        return self._status == STATE_OK
+    #def is_available(self):
+    #    return self._status == STATE_OK
 
 
     # ------------------------------------------------------------------------------------------------------------------
