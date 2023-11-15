@@ -174,15 +174,26 @@ class ChargePointOcppNumber(RestoreNumber, NumberEntity):
     async def async_set_native_value(self, value):
         """Set new value."""
         num_value = int(value)
-        if self.target.is_available() and ((Profiles.SMART & self._charge_point.supported_features) or True) :
+        if self._charge_point.connection_ocpp_version == SubProtocol.OcppV16.value:
+            if self.target.is_available() and ((Profiles.SMART & self._charge_point.supported_features) or True) :
 
-            resp = await self.target.set_max_charge_rate(
-                limit_amps=num_value * 3
-            )
+                resp = await self.target.set_max_charge_rate(
+                    limit_amps=num_value * 3
+                )
 
-            if resp is True:
-                self._attr_native_value = num_value
-                self.async_write_ha_state()
+                if resp is True:
+                    self._attr_native_value = num_value
+                    self.async_write_ha_state()
+        elif self._charge_point.connection_ocpp_version == SubProtocol.OcppV201.value:
+            if self.target.is_available and self._charge_point.get_metric("SmartChargingCtrlr.Available"):
+
+                resp = await self.target.set_max_charge_rate(
+                    limit_amps=num_value * 3
+                )
+
+                if resp is True:
+                    self._attr_native_value = num_value
+                    self.async_write_ha_state()
 
     def append_entity_unique_id(self):
         if self.unique_id not in self.target.ha_entity_unique_ids:

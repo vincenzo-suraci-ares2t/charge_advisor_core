@@ -295,7 +295,6 @@ class HomeAssistantChargePointV201(ChargingStationV201, HomeAssistantEntityMetri
             )
             await asyncio.sleep(1)
 
-        OcppLog.log_i("kkkkkkkkkkkkkkkkkkkkkkkkkkkk")
 
         self._updating_entities = True
 
@@ -326,8 +325,8 @@ class HomeAssistantChargePointV201(ChargingStationV201, HomeAssistantEntityMetri
         OcppLog.log_w(f"Aggiornamento degli EVSE...")
         OcppLog.log_w(f"EVSE disponibili da aggiornare: {self.evses}.")
         for evse in self._evses:
-            OcppLog.log_w(f"HA-EVSE in esame: {evse}.")
-            OcppLog.log_w(f"Entità registrate nell'EVSE in esame: {evse.ha_entity_unique_ids}.")
+            #OcppLog.log_w(f"HA-EVSE in esame: {evse}.")
+            #OcppLog.log_w(f"Entità registrate nell'EVSE in esame: {evse.ha_entity_unique_ids}.")
             ev_dev = dr.async_get_device({(DOMAIN, evse.identifier)})
             # OcppLog.log_w(f"Device EVSE associato: {ev_dev}.")
             for ev_ent in entity_registry.async_entries_for_device(er, ev_dev.id):
@@ -340,7 +339,7 @@ class HomeAssistantChargePointV201(ChargingStationV201, HomeAssistantEntityMetri
                         hass=self._hass,
                         entity_id=ev_ent.entity_id
                     )
-            OcppLog.log_w(f"Aggiornamento connettori associati all'EVSE {evse.id}.")
+            #OcppLog.log_w(f"Aggiornamento connettori associati all'EVSE {evse.id}.")
             for conn in evse.connectors:
                 await conn.update_ha_entities()
             OcppLog.log_w(f"Connettori aggiornati.")

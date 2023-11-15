@@ -276,7 +276,7 @@ class HomeAssistantEVSE(EVSE, HomeAssistantEntityMetrics):
 
 
     def is_available(self):
-        return self._charge_point.is_available()
+        return self._charge_point.is_available
 
     ####################################################################################################################
     # Metodo per gestire le istruzioni ricevute dall'interfaccia grafica.

@@ -133,7 +133,7 @@ class OcppSensor:
                     OcppLog.log_e(f"Adding measurand .....{metric_key}")
                     sensors.append(
                         OcppSensorDescription(
-                            key=metric_key.lower(),
+                            key=metric_key,
                             name=metric_key.replace(".", " "),
                             metric_key=metric_key,
                             connector_id=connector_id,
@@ -224,7 +224,6 @@ class OcppSensor:
                             key=metric_key.lower(),
                             name=metric_key.replace(".", " "),
                             metric_key=metric_key,
-                            connector_id=connector_id,
                             evse_id=evse_id,
                             availability_set=V201_CONNECTOR_CHARGING_SESSION_SENSORS_AVAILABILTY_SET,
                         )
@@ -512,6 +511,7 @@ class ChargePointMetric(RestoreSensor, SensorEntity):
         # Return the native unit of measurement.
         uom = self.target.get_metric_ha_unit(self._metric_key)
         if uom is not None:
+
             self._attr_native_unit_of_measurement = uom
         else:
             self._attr_native_unit_of_measurement = DEFAULT_CLASS_UNITS_HA.get(
