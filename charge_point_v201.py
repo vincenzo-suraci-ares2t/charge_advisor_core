@@ -609,7 +609,10 @@ class HomeAssistantChargePointV201(ChargingStationV201, HomeAssistantEntityMetri
 
     @on(Action.NotifyReport)
     def on_notify_report(self, request_id, generated_at, tbc, seq_no, report_data, **kwargs):
-        OcppLog.log_w(f"Handler Notify Report sovraccaricato in azione.")
         res = super().on_notify_report(request_id, generated_at, tbc, seq_no, report_data, **kwargs)
-        OcppLog.log_w(f"EVSE aggiunti dall'handler della superclasse: {self.evses}")
+        if not tbc:
+            OcppLog.log_e("Invio report concluso, aggiornamento delle entità nell'integrazione...")
+            self._hass.async_create_task(self.add_new_entities())
+            self._hass.async_create_task(self.update_ha_entities())
+            # self._notify_report_ok = True
         return res
