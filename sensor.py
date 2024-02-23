@@ -425,6 +425,8 @@ class ChargePointMetric(RestoreSensor, SensorEntity):
     def state_class(self):
         # Return the state class of the sensor.
         state_class = None
+        OcppLog.log_w(f"Device Class del sensore {self._attr_name}: {self.device_class}.")
+        OcppLog.log_w(f"Unità di misura nativa di {self._attr_name}: {self.native_unit_of_measurement}.")
         if self.device_class is SensorDeviceClass.ENERGY:
             state_class = SensorStateClass.TOTAL_INCREASING
         elif self.device_class in [
@@ -485,6 +487,8 @@ class ChargePointMetric(RestoreSensor, SensorEntity):
             device_class = SensorDeviceClass.TEMPERATURE
         elif mk.startswith("session.time"):
             device_class = SensorDeviceClass.DURATION
+        elif mk.startswith("session.energy"):
+            device_class = SensorDeviceClass.ENERGY
         elif mk.startswith("timestamp.") or self._metric_key in [
             HAChargePointSensors.config_response.value,
             HAChargePointSensors.data_response.value,
