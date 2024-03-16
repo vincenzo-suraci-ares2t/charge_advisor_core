@@ -17,7 +17,6 @@ from .logger import OcppLog
 # ----------------------------------------------------------------------------------------------------------------------
 
 from homeassistant.helpers import device_registry, entity_component, entity_registry
-from homeassistant.const import TIME_MINUTES as HA_TIME_MINUTES
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Local packages

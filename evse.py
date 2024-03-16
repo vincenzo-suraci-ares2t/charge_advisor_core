@@ -21,10 +21,9 @@ from ocpp.exceptions import NotImplementedError
 # ----------------------------------------------------------------------------------------------------------------------
 
 from homeassistant.components.persistent_notification import DOMAIN as PN_DOMAIN
-from homeassistant.const import STATE_OK, STATE_UNAVAILABLE, TIME_MINUTES
+from homeassistant.const import STATE_OK, STATE_UNAVAILABLE, UnitOfTime
 from homeassistant.helpers import device_registry, entity_component, entity_registry
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import TIME_MINUTES as HA_TIME_MINUTES
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Local packages
@@ -264,7 +263,7 @@ class HomeAssistantEVSE(EVSE, HomeAssistantEntityMetrics):
 
     # overridden
     def get_default_session_time_uom(self):
-        return HA_TIME_MINUTES
+        return UnitOfTime.MINUTES
 
     # overridden
     def is_available_for_reservation(self):
