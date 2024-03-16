@@ -1,1 +1,1 @@
-Questo è il repository da utilizzare nello sviluppo dell'integrazione Charge Advisor direttamente in Home Assistant
+Questo è il repository da utilizzare nello sviluppo dell'integrazione Charge Advisor direttamente in Home Assistant. Dopo aver sviluppato il codice, bisogna copiarlo e incollarlo nel repository ufficiale dell'integrazione.
