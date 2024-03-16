@@ -1,3 +1,4 @@
-/ocpp_central_system/*.*
-/.idea
-/__pycache__
+/ocpp_central_system/
+/.idea/
+/__pycache__/
+
