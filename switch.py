@@ -17,7 +17,7 @@ from homeassistant.components.switch import (
     SwitchEntity,
     SwitchEntityDescription,
 )
-from homeassistant.const import POWER_KILO_WATT
+from homeassistant.const import UnitOfPower
 from homeassistant.helpers.entity import DeviceInfo
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -419,7 +419,7 @@ class ChargePointSwitchEntity(SwitchEntity):
         if self.entity_description.key == "charge_control":
             value = self.target.get_metric_value(Measurand.power_active_import.value)
             ha_unit = self.target.get_metric_ha_unit(Measurand.power_active_import.value)
-            if ha_unit == POWER_KILO_WATT:
+            if ha_unit == UnitOfPower.KILO_WATT:
                 value = value * 1000
             return value
         return None
@@ -543,7 +543,7 @@ class EVSESwitchEntity(ChargePointSwitchEntity):
         if self.entity_description.key == "charge_control":
             value = self.target.get_metric_value(Measurand.power_active_import.value)
             ha_unit = self.target.get_metric_ha_unit(Measurand.power_active_import.value)
-            if ha_unit == POWER_KILO_WATT:
+            if ha_unit == UnitOfPower.KILO_WATT:
                 value = value * 1000
             return value
         return None
