@@ -7,5 +7,5 @@
 # Ignore __pycache__ directory (local development)
 /__pycache__/
 
-# Ignore config.py file (local development)
+# Ignore config.py file in root directory (local development)
 /config.py
