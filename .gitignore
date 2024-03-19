@@ -1,4 +1,11 @@
+# Ignore ocpp_central_system directory
 /ocpp_central_system/
+
+# Ignore .idea directory (php storm)
 /.idea/
+
+# Ignore __pycache__ directory (local development)
 /__pycache__/
-config.py
+
+# Ignore config.py file (local development)
+/config.py
