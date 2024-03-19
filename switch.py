@@ -182,14 +182,14 @@ async def async_setup_entry(hass, entry, async_add_devices):
     # Get the Central system instance
     central_system = hass.data[DOMAIN][entry.entry_id]    
 
-    entities = []
-    entities.append(CentralSystemSwitchEntity(central_system, CENTRAL_SYSTEM_SWITCHES[0]))
+    entities = [CentralSystemSwitchEntity(central_system, CENTRAL_SYSTEM_SWITCHES[0])]
+
     # Per ogni ID Charge Point...
     for cp_id in central_system.charge_points:
         # Recuperare il Charge Point vero e proprio.
         charge_point = central_system.charge_points[cp_id]
-        OcppLog.log_w(f"CHARGE POINT IN ESAME: {charge_point}.")
-        OcppLog.log_w(f"Tipo del charge point in esame: {type(charge_point)}.")
+        OcppLog.log_i(f"CHARGE POINT IN ESAME: {charge_point}.")
+        OcppLog.log_i(f"Tipo del charge point in esame: {type(charge_point)}.")
         # Per ogni switch da aggiungere al Charge Point.
         for desc in CHARGE_POINT_SWITCHES:
             # Creare un oggetto di tipo ChargePointSwitchEntity sulla base della descrizione che si trova nella
@@ -249,16 +249,16 @@ async def async_setup_entry(hass, entry, async_add_devices):
                                 )
                             )
 
-    OcppLog.log_w(f"Entità switch aggiunte: {entities}.")
+    OcppLog.log_i(f"Entità switch aggiunte: {entities}.")
     # Aggiungiamo gli unique_id di ogni entità registrata in fase di setup al
     # Charge Point o al Connector
     for entity in entities:
         entity.append_entity_unique_id()
-        OcppLog.log_w(f"Entità aggiunta e suo ID: {entity.name}, {entity.entity_id}.")
-        OcppLog.log_w(f"Tipo entità aggiunta: {type(entity)}.")
+        OcppLog.log_i(f"Entità aggiunta e suo ID: {entity.name}, {entity.entity_id}.")
+        OcppLog.log_i(f"Tipo entità aggiunta: {type(entity)}.")
 
     async_add_devices(entities, False)
-    OcppLog.log_w(f"Inserimento terminato.")
+    OcppLog.log_i(f"Inserimento terminato.")
 
 class CentralSystemSwitchEntity(SwitchEntity):
     _attr_has_entity_name = True
