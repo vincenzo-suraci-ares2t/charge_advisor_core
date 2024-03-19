@@ -31,8 +31,8 @@ from ocpp.v201.enums import OperationalStatusType, ConnectorStatusType
 # Local packages
 # ----------------------------------------------------------------------------------------------------------------------
 
-from .const import DOMAIN, ICON
-from .enums import HAChargePointServices, HAChargePointSensors, HAConnectorSensors, SubProtocol, HAEVSESensors
+from .const import DOMAIN, ICONS
+from .enums import HACentralSystemServices, HAChargePointServices, HAConnectorSensors, SubProtocol
 from .logger import OcppLog
 
 # Switch configuration definitions
@@ -51,19 +51,25 @@ class OcppSwitchDescription(SwitchEntityDescription):
 
 """
 Gli switch sono aggiunti "staticamente" dall'integrazione.
-Vengono aggiunti 2 switch:
-1) Availability > dovrebbe essere uno per ogni connettore!
-2) Charge_Control > dovrebbe essere uno per ogni connettore! 
+Vengono aggiunte le seguenti categorie switch:
+1) uno switch per dis/attivare la comunicazione (websocket) con la Central System (CS OCPP1.6J) ovvero con la Charging 
+   Station Central System (CSMS OCPP2.0.1)
+2) uno switch per dis/attivare la disponibilità di ogni Charging Point (CP OCPP 1.6J) o Charging Station (CS OCPP 2.0.1)
+3) uno switch per dis/attivare la disponibilità di ogni ESVE   
+4) uno switch per dis/attivare la disponibilità di ogni Connector
+5) uno switch per dis/attivare la ricarica (Charge_Control) di ogni Connettore OCPP 1.6 (connesso ad un CP)
+6) uno switch per dis/attivare la ricarica (Charge_Control) di ogni Connettore OCPP 2.0.1 (connesso ad un EVSE)
 """
+
 # Switch della Central System.
 CENTRAL_SYSTEM_SWITCHES: Final = [
     OcppSwitchDescription(
         key="energy_control_communication",
         name="EMS Communication",
-        icon=ICON,
-        on_action_service_name=HAChargePointServices.service_ems_communication_start.name, # service name (not value)
-        off_action_service_name=HAChargePointServices.service_ems_communication_stop.name, # service name (not value)
-        metric_key=HAChargePointServices.service_ems_communication_start.value,
+        icon=ICONS["ev-station"],
+        on_action_service_name=HACentralSystemServices.service_ems_communication_start.name, # service name (not value)
+        off_action_service_name=HACentralSystemServices.service_ems_communication_stop.name, # service name (not value)
+        metric_key=HACentralSystemServices.service_ems_communication_start.value,
         metric_condition=[
             True #Questa è hard coded per il momento, solo provvisorio
         ],
@@ -77,7 +83,7 @@ CHARGE_POINT_SWITCHES: Final = [
     OcppSwitchDescription(
         key="availability",
         name="Availability",
-        icon=ICON,
+        icon=ICONS["ev-station"],
         on_action_service_name=HAChargePointServices.service_availability.name, # service name (not value)
         off_action_service_name=HAChargePointServices.service_availability.name, # service name (not value)
         metric_key="ChargingStation.AvailabilityState",
@@ -95,7 +101,7 @@ CHARGE_POINT_CONNECTOR_SWITCHES: Final = [
     OcppSwitchDescription(
         key="charge_control",
         name="Charge Control",
-        icon=ICON,
+        icon=ICONS["ev-station"],
         on_action_service_name=HAChargePointServices.service_charge_start.name,
         off_action_service_name=HAChargePointServices.service_charge_stop.name,
         metric_key=HAConnectorSensors.status.value,
@@ -110,7 +116,7 @@ CHARGE_POINT_CONNECTOR_SWITCHES: Final = [
     OcppSwitchDescription(
         key="availability",
         name="Availability",
-        icon=ICON,
+        icon=ICONS["ev-station"],
         on_action_service_name=HAChargePointServices.service_availability.name,
         off_action_service_name=HAChargePointServices.service_availability.name,
         metric_key=HAConnectorSensors.availability.value,
@@ -126,7 +132,7 @@ CHARGE_POINT_EVSE_SWITCHES: Final = [
     OcppSwitchDescription(
         key="charge_control",
         name="Charge Control",
-        icon=ICON,
+        icon=ICONS["ev-station"],
         on_action_service_name=HAChargePointServices.service_charge_start.name,
         off_action_service_name=HAChargePointServices.service_charge_stop.name,
         metric_key="EVSE.AvailabilityState",
@@ -138,7 +144,7 @@ CHARGE_POINT_EVSE_SWITCHES: Final = [
     OcppSwitchDescription(
         key="availability",
         name="Availability",
-        icon=ICON,
+        icon=ICONS["ev-station"],
         on_action_service_name=HAChargePointServices.service_availability.name,
         off_action_service_name=HAChargePointServices.service_availability.name,
         metric_key="EVSE.AvailabilityState",
@@ -156,7 +162,7 @@ EVSE_CONNECTOR_SWITCHES: Final = [
     OcppSwitchDescription(
         key="availability",
         name="Availability",
-        icon=ICON,
+        icon=ICONS["ev-station"],
         on_action_service_name=HAChargePointServices.service_availability.name,
         off_action_service_name=HAChargePointServices.service_availability.name,
         metric_key="Connector.AvailabilityState",

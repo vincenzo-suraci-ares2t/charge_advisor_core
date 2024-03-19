@@ -105,6 +105,15 @@ DOMAIN = "charge_advisor"
 CONFIG = "config"
 ICON = "mdi:ev-station"
 
+# Material Design Icons (MDI)
+# source: https://pictogrammers.com/library/mdi/
+ICONS = {
+    "current-ac": "mdi:current-ac",
+    "current-dc": "mdi:current-dc",
+    "ev-station": "mdi:ev-station",
+    "sine-wave": "mdi:sine-wave",
+}
+
 # source: https://pictogrammers.com/library/mdi/
 MEASURAND_ICON = {
     Measurand.energy_active_import_register.value: "mdi:lightning-bolt",
@@ -136,8 +145,6 @@ MEASURAND_ICON = {
     Measurand.soc.value: "mdi:battery-charging",
     Measurand.temperature.value: "mdi:ev-station",
 }
-
-# CA SERVER CONFIGURATION
 
 
 

@@ -42,7 +42,7 @@ from ocpp_central_system.charging_station_management_system import ChargingStati
 from .metric import HomeAssistantEntityMetrics
 from .charge_point import HomeAssistantChargePoint
 from .const import *
-from .enums import HAChargePointServices
+from .enums import HACentralSystemServices
 from .logger import OcppLog
 from .config import *
 
@@ -288,9 +288,9 @@ class HomeAssistantCentralSystem(ChargingStationManagementSystem, HomeAssistantE
         OcppLog.log_d(f"Calling service {service_name}")
         resp = False
         match service_name:
-            case HAChargePointServices.service_ems_communication_start.name:
+            case HACentralSystemServices.service_ems_communication_start.name:
                 resp = await self.start_ems_communication()
-            case HAChargePointServices.service_ems_communication_stop.name:
+            case HACentralSystemServices.service_ems_communication_stop.name:
                 resp = await self.stop_ems_communication()
             case _:
                 OcppLog.log_d(f"{service_name} unknown")
@@ -328,7 +328,7 @@ class HomeAssistantCentralSystem(ChargingStationManagementSystem, HomeAssistantE
 
             return True
 
-        self.set_metric_value(HAChargePointServices.service_ems_communication_start.value, True)
+        self.set_metric_value(HACentralSystemServices.service_ems_communication_start.value, True)
 
         return True
 
@@ -340,7 +340,7 @@ class HomeAssistantCentralSystem(ChargingStationManagementSystem, HomeAssistantE
         self._charge_advisor_thread_rest_api = None
         self._charge_advisor_thread_websocket = None
 
-        self.set_metric_value(HAChargePointServices.service_ems_communication_start.value, False)
+        self.set_metric_value(HACentralSystemServices.service_ems_communication_start.value, False)
 
 
         return True

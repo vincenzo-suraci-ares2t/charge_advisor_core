@@ -474,15 +474,17 @@ class ChargePointMetric(RestoreSensor, SensorEntity):
             device_class = SensorDeviceClass.CURRENT
         elif mk.startswith("voltage"):
             device_class = SensorDeviceClass.VOLTAGE
-        elif mk.startswith("energy.") and not mk.startswith("energy.reactive"):
+        elif mk.startswith("energy."):
             device_class = SensorDeviceClass.ENERGY
         elif self._metric_key in [
-            Measurand.frequency.value,
-            Measurand.rpm.value,
-        ] or mk.startswith("frequency"):
+                Measurand.frequency.value,
+                Measurand.rpm.value,
+            ] or mk.startswith("frequency"):
             device_class = SensorDeviceClass.FREQUENCY
-        elif mk.startswith(tuple(["power.active", "power.offered"])) and not mk.startswith("power.reactive"):
+        elif mk.startswith(tuple(["power.active", "power.offered"])):
             device_class = SensorDeviceClass.POWER
+        elif mk.startswith("power.reactive"):
+            device_class = SensorDeviceClass.REACTIVE_POWER
         elif mk.startswith("temperature."):
             device_class = SensorDeviceClass.TEMPERATURE
         elif mk.startswith("session.time"):
@@ -490,10 +492,10 @@ class ChargePointMetric(RestoreSensor, SensorEntity):
         elif mk.startswith("session.energy"):
             device_class = SensorDeviceClass.ENERGY
         elif mk.startswith("timestamp.") or self._metric_key in [
-            HAChargePointSensors.config_response.value,
-            HAChargePointSensors.data_response.value,
-            HAChargePointSensors.heartbeat.value,
-        ]:
+                HAChargePointSensors.config_response.value,
+                HAChargePointSensors.data_response.value,
+                HAChargePointSensors.heartbeat.value,
+            ]:
             device_class = SensorDeviceClass.TIMESTAMP
         elif mk.startswith("soc"):
             device_class = SensorDeviceClass.BATTERY
