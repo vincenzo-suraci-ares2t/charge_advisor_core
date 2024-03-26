@@ -81,11 +81,18 @@ class OcppSensorDescription(SensorEntityDescription):
 
 class OcppSensor:
 
+    # Metodo per il recupero delle entità di tipo Sensore per uno specifico Charge Point
     @staticmethod
     def get_charge_point_entities(hass, charge_point: ChargePoint):
 
+        # Recupero della Central System
         central_system = charge_point.central
 
+        # --------------------------------------------------------------------------------------------------------------
+        # Sensori associati al Charge Point
+        # --------------------------------------------------------------------------------------------------------------
+
+        # Array contenente tutti i sensori che dovranno essere registrati in Home Assistant
         sensors = []
 
         for metric_key in list(HAChargePointSensors):
@@ -106,6 +113,10 @@ class OcppSensor:
                         metric_key=metric_key,
                     )
                 )
+
+        # --------------------------------------------------------------------------------------------------------------
+        # Sensori associati a ciascun Connettore del Charge Point - OCPP 1.6
+        # --------------------------------------------------------------------------------------------------------------
 
         if charge_point.connection_ocpp_version == SubProtocol.OcppV16.value:
             for connector_id in range(1, charge_point.num_connectors + 1):
@@ -140,6 +151,11 @@ class OcppSensor:
                             availability_set=CONNECTOR_CHARGING_SESSION_SENSORS_AVAILABILTY_SET,
                         )
                     )
+
+        # --------------------------------------------------------------------------------------------------------------
+        # Sensori associati a ciascun Connettore di ciascun EVSE del Charging Station - OCPP 2.0.1
+        # --------------------------------------------------------------------------------------------------------------
+
         elif charge_point.connection_ocpp_version == SubProtocol.OcppV201.value:
 
             def create_sensors_from_include_components(include_components_obj, sensors):
@@ -211,8 +227,7 @@ class OcppSensor:
                     case TierLevel.Connector:
                         connector_id = tier_level.connector_id
                         evse_id = tier_level.evse_id
-
-                        OcppLog.log_d(f"Adding to Connector ID {connector_id} on EVSE {evse_id}")
+                        OcppLog.log_d(f"Adding Connector ID {connector_id} on EVSE {evse_id}")
                     case _:
                         connector_id = None
                         evse_id = None
@@ -251,9 +266,9 @@ class OcppSensor:
                     create_sensors_from_include_components(connector, sensors)
                     create_sensors_from_tier_level(connector, sensors)
 
-
-
-
+        # --------------------------------------------------------------------------------------------------------------
+        # Entità associate ai sensori del Charge Point
+        # --------------------------------------------------------------------------------------------------------------
 
         entities = []
 
@@ -317,6 +332,7 @@ class OcppSensor:
                             sensor,
                         )
                     )
+
         return entities
 
 
