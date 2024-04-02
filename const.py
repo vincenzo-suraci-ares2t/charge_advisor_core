@@ -112,6 +112,7 @@ ICONS = {
     "current-dc": "mdi:current-dc",
     "ev-station": "mdi:ev-station",
     "sine-wave": "mdi:sine-wave",
+    "web": "mdi:web",
 }
 
 # source: https://pictogrammers.com/library/mdi/

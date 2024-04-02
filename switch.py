@@ -64,9 +64,9 @@ Vengono aggiunte le seguenti categorie switch:
 # Switch della Central System.
 CENTRAL_SYSTEM_SWITCHES: Final = [
     OcppSwitchDescription(
-        key="energy_control_communication",
-        name="EMS Communication",
-        icon=ICONS["ev-station"],
+        key="charge_advisor_backend",
+        name="Charge Advisor Backend",
+        icon=ICONS["web"],
         on_action_service_name=HACentralSystemServices.service_ems_communication_start.name, # service name (not value)
         off_action_service_name=HACentralSystemServices.service_ems_communication_stop.name, # service name (not value)
         metric_key=HACentralSystemServices.service_ems_communication_start.value,
