@@ -283,9 +283,9 @@ class CentralSystemSwitchEntity(SwitchEntity):
             identifiers={(DOMAIN, self._central_system.id)}
         )
         # OcppLog.log_d(f"{self._attr_unique_id} switch created!")
-        OcppLog.log_w(f"Central system ID: {self._central_system.id}.")
-        OcppLog.log_w(f"Tipo central system in esame: {type(self._central_system)}.")
-        OcppLog.log_w(f"Central System attr_unique_id: {self._attr_unique_id}.")
+        OcppLog.log_d(f"Central system ID: {self._central_system.id}.")
+        OcppLog.log_d(f"Tipo central system in esame: {type(self._central_system)}.")
+        OcppLog.log_d(f"Central System attr_unique_id: {self._attr_unique_id}.")
 
     @property
     def target(self):

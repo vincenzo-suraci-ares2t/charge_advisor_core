@@ -139,7 +139,6 @@ class OcppSensor:
                             availability_set=CONNECTOR_CHARGING_SESSION_SENSORS_AVAILABILTY_SET,
                         )
                     )
-                OcppLog.log_e(traceback.format_exc())
                 for metric_key in charge_point.measurands:
                     #OcppLog.log_e(f"Adding measurand .....{metric_key}")
                     sensors.append(
