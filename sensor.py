@@ -189,10 +189,10 @@ class OcppSensor:
                                         evse_id = None
                                     case TierLevel.EVSE:
                                         connector_id = None
-                                        evse_id = component._component_tier.evse_id
+                                        evse_id = component._component_tier.id
                                     case TierLevel.Connector:
                                         connector_id = component._component_tier.connector_id
-                                        evse_id = component._component_tier.evse_id
+                                        evse_id = component._component_tier.id
 
                                         OcppLog.log_d(f"Adding to Connector ID {connector_id} on EVSE {evse_id}")
                                     case _:
@@ -222,10 +222,10 @@ class OcppSensor:
                         evse_id = None
                     case TierLevel.EVSE:
                         connector_id = None
-                        evse_id = tier_level.evse_id
+                        evse_id = tier_level.id
                     case TierLevel.Connector:
                         connector_id = tier_level.connector_id
-                        evse_id = tier_level.evse_id
+                        evse_id = tier_level.id
                         OcppLog.log_d(f"Adding Connector ID {connector_id} on EVSE {evse_id}")
                     case _:
                         connector_id = None
@@ -257,7 +257,7 @@ class OcppSensor:
                             key=metric_key.lower(),
                             name=metric_key.replace(".", " "),
                             metric_key=metric_key,
-                            evse_id=evse.evse_id,
+                            evse_id=evse.id,
                             availability_set=V201_CONNECTOR_CHARGING_SESSION_SENSORS_AVAILABILTY_SET,
                         )
                     )
@@ -673,7 +673,7 @@ class EVSEConnectorMetric(EVSEMetric):
             SENSOR_DOMAIN,
             DOMAIN,
             self._charge_point.id,
-            str(self._evse.evse_id),
+            str(self._evse.id),
             str(self._connector.connector_id),
             self.entity_description.key
         ])
