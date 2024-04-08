@@ -188,9 +188,8 @@ class HomeAssistantEVSE(EVSE, HomeAssistantEntityMetrics):
     async def get_connector_instance(self, connector_id):
         return HomeAssistantConnectorV201(
             hass=self._hass,
-            charge_point=self.charge_point,
             config_entry=self._config_entry,
-            evse_id=self.id,
+            evse=self,
             connector_id=connector_id
         )
 
