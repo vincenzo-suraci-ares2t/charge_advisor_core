@@ -278,7 +278,7 @@ class HomeAssistantEVSE(EVSE, HomeAssistantEntityMetrics):
         return await self._charge_point.call_ha_service(
             service_name=service_name,
             state=state,
-            evse_id=self.evse_id,
+            evse_id=self.id,
             connector_id=connector_id,
             transaction_id=self._active_transaction_id
         )
