@@ -174,8 +174,7 @@ class OcppSensor:
 
                             for variable_attribute_type in variable.variable_attributes:
 
-
-                                metric_key = component._component_tier.compose_metric_key(
+                                metric_key = component.tier.compose_metric_key(
                                     component_name=component_name,
                                     component_instance=component.instance,
                                     variable_name=variable.name,
@@ -183,16 +182,16 @@ class OcppSensor:
                                     attribute_type=variable_attribute_type
                                 )
 
-                                match component._component_tier.tier_level:
+                                match component.tier.tier_level:
                                     case TierLevel.ChargingStation:
                                         connector_id = None
                                         evse_id = None
                                     case TierLevel.EVSE:
                                         connector_id = None
-                                        evse_id = component._component_tier.id
+                                        evse_id = component.tier.id
                                     case TierLevel.Connector:
-                                        connector_id = component._component_tier.connector_id
-                                        evse_id = component._component_tier.id
+                                        connector_id = component.tier.id
+                                        evse_id = component.tier.evse_id
 
                                         OcppLog.log_d(f"Adding to Connector ID {connector_id} on EVSE {evse_id}")
                                     case _:
