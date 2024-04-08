@@ -195,33 +195,20 @@ class HomeAssistantEVSE(EVSE, HomeAssistantEntityMetrics):
         )
 
     # overridden
-    def add_connector(self, connector_id = None):
+    async def add_connector(self, connector_id = None):
         # Creazione del dispositivo connettore.
-        conn = self.create_connector_instance(connector_id)
-        OcppLog.log_w(f"Aggiunta connettore al registro dispositivi...")
+        await super().add_connector(connector_id)
+        ha_conn = self.get_connector_by_id(connector_id)
+
         dr = device_registry.async_get(self._hass)
         dr.async_get_or_create(
             config_entry_id=self._config_entry.entry_id,
-            identifiers={(DOMAIN, str(self._charge_point.id) + '_' + conn.identifier)},
-            name=str(self._charge_point.id) + '_' + conn.identifier,
+            identifiers={(DOMAIN, str(self._charge_point.id) + '_' + ha_conn.identifier)},
+            name=str(self._charge_point.id) + '_' + ha_conn.identifier,
             model=self._charge_point.model + " Connector",
             via_device=(DOMAIN, self.identifier),
             manufacturer=self._charge_point.vendor
         )
-        OcppLog.log_w(f"Creazione di un connettore integrato di nome {str(self._charge_point.id) + '_' + conn.identifier}...")
-        # Creazione del Connettore integrato.
-        ha_conn = HomeAssistantConnectorV201(
-            hass=self._hass,
-            charge_point=self._charge_point,
-            connector_id=conn.connector_id,
-            config_entry=self._config_entry,
-            evse_id=self.id
-        )
-        OcppLog.log_w(f"Connettore integrato creato: {ha_conn}.")
-        OcppLog.log_w(f"Entità registrate nell'EVSE: {self.ha_entity_unique_ids}.")
-        self._connectors.append(ha_conn)
-
-        return ha_conn
 
     # overridden
     async def notify(self, msg: str, params={}):

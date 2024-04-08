@@ -409,25 +409,15 @@ class HomeAssistantChargePointV201(ChargingStationV201, HomeAssistantEntityMetri
 
     # overridden
     def create_evse_task(self, evse_id: int):
-        evse = super().create_evse_task(evse_id)
-        OcppLog.log_w(f"EVSE da funzione sovraccaricata generato correttamente.")
-        dr = device_registry.async_get(self._hass)
-        dr.async_get_or_create(
-            config_entry_id=self._config_entry.entry_id,
-            identifiers={(DOMAIN, evse.identifier)},
-            name=evse.identifier,
-            model=self.model + " EVSE",
-            via_device=(DOMAIN, self.id),
-            manufacturer=self.vendor
-        )
-        OcppLog.log_w(f"EVSE di nome {evse.identifier} aggiunto correttamente al registro dispositivi.")
-        OcppLog.log_w(f"Creazione EVSE integrato...")
         ha_evse = HomeAssistantEVSE(
             id=str(evse_id),
             hass=self._hass,
             config_entry=self._config_entry,
             charge_point=self
         )
+
+        OcppLog.log_w(f"EVSE di nome {ha_evse.identifier} aggiunto correttamente al registro dispositivi.")
+        OcppLog.log_w(f"Creazione EVSE integrato...")
         OcppLog.log_w(f"EVSE integrato creato correttamente.")
         return ha_evse
 
@@ -506,39 +496,29 @@ class HomeAssistantChargePointV201(ChargingStationV201, HomeAssistantEntityMetri
 
     # overridden
     async def get_evse_instance(self, evse_id):
-        return HomeAssistantEVSE(
-            self._hass,
-            self,
-            evse_id
+        ha_evse = HomeAssistantEVSE(
+            hass=self._hass,
+            charge_point=self,
+            id=evse_id,
+            config_entry=self._config_entry,
         )
 
-    # overridden
-    async def add_evse(self, evse_id):
-        OcppLog(f"Versione sovraccaricata di add_evse.")
         dr = device_registry.async_get(self._hass)
-        evse = await super().add_evse(evse_id)
-        # Create Charge Point's EVSE Devices
         dr.async_get_or_create(
             config_entry_id=self._config_entry.entry_id,
-            identifiers={(DOMAIN, evse.identifier)},
-            name=evse.identifier,
+            identifiers={(DOMAIN, ha_evse.identifier)},
+            name=ha_evse.identifier,
             model=self.model + " EVSE",
             via_device=(DOMAIN, self.id),
             manufacturer=self.vendor
         )
-        OcppLog.log_w(f"EVSE di nome {evse.identifier} aggiunto correttamente al registro dispositivi.")
-        OcppLog.log_w(f"Creazione EVSE integrato...")
-        ha_evse = HomeAssistantEVSE(
-            id=str(evse_id),
-            hass=self._hass,
-            config_entry=self._config_entry,
-            charge_point=self
-        )
-        OcppLog.log_w(f"EVSE integrato creato correttamente.")
-
-        await self.add_ha_entities()
 
         return ha_evse
+
+    # overridden
+    async def add_evse(self, evse_id):
+        await super().add_evse(evse_id)
+        await self.add_ha_entities()
 
     # overridden
     def get_auth_id_tag(self, id_tag: str):

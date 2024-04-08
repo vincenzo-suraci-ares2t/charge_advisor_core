@@ -424,25 +424,30 @@ class HomeAssistantChargePoint(ChargingStation, HomeAssistantEntityMetrics):
 
     # overridden
     async def get_connector_instance(self, connector_id):
-        return HomeAssistantConnector(
+
+        ha_connector = HomeAssistantConnector(
             self._hass,
             self,
             connector_id
         )
 
-    # overridden
-    async def add_connector(self, connector_id):
         dr = device_registry.async_get(self._hass)
-        conn = await super().add_connector(connector_id)
         # Create Charge Point's Connector Devices
         dr.async_get_or_create(
             config_entry_id=self._config_entry.entry_id,
-            identifiers={(DOMAIN, conn.identifier)},
-            name=conn.identifier,
+            identifiers={(DOMAIN, ha_connector.identifier)},
+            name=ha_connector.identifier,
             model=self.model + " Connector",
             via_device=(DOMAIN, self.id),
             manufacturer=self.vendor
         )
+
+        return ha_connector
+
+    # overridden
+    async def add_connector(self, connector_id):
+        await super().add_connector(connector_id)
+        await self.add_ha_entities()
 
     # overridden
     def get_auth_id_tag(self, id_tag: str):

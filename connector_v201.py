@@ -38,9 +38,8 @@ class HomeAssistantConnectorV201(Connector, HomeAssistantEntityMetrics):
     def __init__(
             self,
             hass,
-            charge_point,
             config_entry,
-            evse_id,
+            evse,
             connector_id = 0
     ):
 
@@ -57,14 +56,8 @@ class HomeAssistantConnectorV201(Connector, HomeAssistantEntityMetrics):
 
         self._config_entry = config_entry
 
-        self._charge_point = charge_point
-
-        Connector.__init__(self, connector_id, evse_id)
+        Connector.__init__(self, evse, connector_id)
         HomeAssistantEntityMetrics.__init__(self)
-
-    @property
-    def identifier(self):
-         return self._charge_point.id + '_' + str(self.evse_id) + '_' + str(self.connector_id)
 
     # ------------------------------------------------------------------------------------------------------------------
     # Overridden Methods
