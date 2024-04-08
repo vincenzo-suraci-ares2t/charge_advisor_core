@@ -11,7 +11,6 @@ import subprocess
 # Importing dinamico del package ocpp-central-system
 # ----------------------------------------------------------------------------------------------------------------------
 from .config import *
-logging.error("Okay")
 if INTEGRATION_TYPE == INTEGRATION_TYPE_PROD:
     args = [
         "apk add --update --no-cache --virtual .tmp-build-deps gcc libc-dev linux-headers postgresql-dev",
