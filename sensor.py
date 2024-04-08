@@ -679,8 +679,7 @@ class EVSEConnectorMetric(EVSEMetric):
         OcppLog.log_e(f"Adding Connector sensor {self._attr_unique_id} with identifier {self._connector.identifier} !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
         self._extra_attr = self.entity_description.extra_attributes
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._connector.identifier)},
-            #via_device=(DOMAIN, self._evse.evse_id),
+            identifiers={(DOMAIN, self._connector.identifier)}
         )
 
         # OcppLog.log_d(f"Adding {self._attr_unique_id} entity")
