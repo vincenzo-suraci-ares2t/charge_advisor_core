@@ -87,7 +87,7 @@ class HomeAssistantConnectorV201(Connector, HomeAssistantEntityMetrics):
     # Updates the Charge Point Home Assistant Entities and its Connectors Home Assistant Entities
     async def update_ha_entities(self):
 
-        OcppLog.log_w(f"Aggiornamento dell'entità connettore...")
+        #OcppLog.log_w(f"Aggiornamento dell'entità connettore...")
 
         while self._adding_entities or self._updating_entities:
             await asyncio.sleep(1)
@@ -97,8 +97,8 @@ class HomeAssistantConnectorV201(Connector, HomeAssistantEntityMetrics):
         # Update sensors values in HA
         er = entity_registry.async_get(self._hass)
         dr = device_registry.async_get(self._hass)
-        OcppLog.log_w(f"Identificatore del connettore in esame: {self.identifier}.")
-        OcppLog.log_w(f"Aggiornamento entità del connettore...")
+        #OcppLog.log_w(f"Identificatore del connettore in esame: {self.identifier}.")
+        #OcppLog.log_w(f"Aggiornamento entità del connettore...")
         #OcppLog.log_w(f"Entità registrate nel connettore in esame: {self.ha_entity_unique_ids}")
         identifiers = {(DOMAIN, self.identifier)}
         conn_dev = dr.async_get_device(identifiers)
@@ -113,4 +113,4 @@ class HomeAssistantConnectorV201(Connector, HomeAssistantEntityMetrics):
 
         self._updating_entities = False
 
-        OcppLog.log_w(f"Aggiornamento entità connettore terminato.")
+        #OcppLog.log_w(f"Aggiornamento entità connettore terminato.")

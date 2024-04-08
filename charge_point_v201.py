@@ -321,9 +321,9 @@ class HomeAssistantChargePointV201(ChargingStationV201, HomeAssistantEntityMetri
                     hass=self._hass,
                     entity_id=cp_ent.entity_id
                 )
-        OcppLog.log_w(f"Charge Point aggiornati.")
-        OcppLog.log_w(f"Aggiornamento degli EVSE...")
-        OcppLog.log_w(f"EVSE disponibili da aggiornare: {self.evses}.")
+        #OcppLog.log_w(f"Charge Point aggiornati.")
+        #OcppLog.log_w(f"Aggiornamento degli EVSE...")
+        #OcppLog.log_w(f"EVSE disponibili da aggiornare: {self.evses}.")
         for evse in self._evses:
             #OcppLog.log_w(f"HA-EVSE in esame: {evse}.")
             #OcppLog.log_w(f"Entità registrate nell'EVSE in esame: {evse.ha_entity_unique_ids}.")
@@ -342,12 +342,12 @@ class HomeAssistantChargePointV201(ChargingStationV201, HomeAssistantEntityMetri
             #OcppLog.log_w(f"Aggiornamento connettori associati all'EVSE {evse.id}.")
             for conn in evse.connectors:
                 await conn.update_ha_entities()
-            OcppLog.log_w(f"Connettori aggiornati.")
-        OcppLog.log_w(f"EVSE aggiornati.")
+            #OcppLog.log_w(f"Connettori aggiornati.")
+        #OcppLog.log_w(f"EVSE aggiornati.")
 
         self._updating_entities = False
 
-        OcppLog.log_d(f"Aggiornamento delle entità HA terminato correttamente.")
+        #OcppLog.log_i(f"Aggiornamento delle entità HA terminato correttamente.")
 
 
 
