@@ -5,32 +5,64 @@
 
 import asyncio
 import logging
-import logging
 import subprocess
-import sys
 
+# ----------------------------------------------------------------------------------------------------------------------
 # Importing dinamico del package ocpp-central-system
+# ----------------------------------------------------------------------------------------------------------------------
 from .config import *
+logging.error("Okay")
 if INTEGRATION_TYPE == INTEGRATION_TYPE_PROD:
-    logging.error(subprocess.run([f"apk add --update --no-cache --virtual .tmp-build-deps \
-        gcc libc-dev linux-headers postgresql-dev \
-        && apk add libffi-dev"], shell=True, capture_output=True))
+    args = [
+        "apk add --update --no-cache --virtual .tmp-build-deps gcc libc-dev linux-headers postgresql-dev",
+        "apk add libffi-dev"
+    ]
+    sub_proc = subprocess.run(
+        args=args,
+        shell=True,
+        capture_output=True
+    )
+    if sub_proc.returncode == 0:
+        logging.info(sub_proc)
+    else:
+        logging.error(sub_proc)
     # Installazione del package ocpp_central_system da bitbucket con chiave privata
     # Path assoluto alla chiave per accedere al repository di ocpp_central_system
     key_path = "/config/ssh-keys/ocpp-central-system-key"
     # Url al repository git (bitbucket) di ocpp_central_system
     package_url = "git+ssh://git@bitbucket.org/a2t-smartcity/ocpp-central-system.git"
-    logging.error(subprocess.run([f"eval `ssh-agent -s` \
-    && ssh-add {key_path} \
-    && ssh -o StrictHostKeyChecking=no -T git@bitbucket.org \
-    && pip install {package_url} --upgrade"], shell=True, capture_output=True))
+    args = [
+        "eval `ssh-agent -s` ",
+        f"ssh-add {key_path}" +
+        "ssh -o StrictHostKeyChecking=no -T git@bitbucket.org",
+        f"pip install {package_url} --upgrade"
+    ]
+    sub_proc = subprocess.run(
+        args=args,
+        shell=True,
+        capture_output=True
+    )
+    if sub_proc.returncode == 0:
+        logging.info(sub_proc)
+    else:
+        logging.error(sub_proc)
 elif INTEGRATION_TYPE == INTEGRATION_TYPE_DEV:
-    # Installazione del package da locale, solo debug
-    # Path alla directory locale di ocpp_central_system
+    # Installazione del package da locale, modalità DEV
     local_package_name = "./custom_components/charge_advisor/ocpp_central_system"
-    logging.error(subprocess.run([f"pip install --upgrade --force-reinstall -e {local_package_name}"],
-                                 shell=True,
-                                 capture_output=True))
+    args = [
+        f"pip install --upgrade --force-reinstall -e {local_package_name}"
+    ]
+    sub_proc = subprocess.run(
+        args=args,
+        shell=True,
+        capture_output=True
+    )
+    if sub_proc.returncode == 0:
+        logging.info(sub_proc)
+    else:
+        logging.error(sub_proc)
+else:
+    logging.error("Invalid INTEGRATION_TYPE: " + INTEGRATION_TYPE)
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Home Assistant packages
