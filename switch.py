@@ -587,10 +587,10 @@ class EVSEConnectorSwitchEntity(EVSESwitchEntity):
             identifiers={(DOMAIN, self._connector.identifier)},
             #via_device=(DOMAIN, self._evse.identifier),
         )
-        OcppLog.log_w(f"TIPO CONNECTOR: {type(self.target)}.")
-        OcppLog.log_w(f"Connector VIA DEVICE: ({DOMAIN}, {self._evse.identifier}).")
-        OcppLog.log_w(f"Connector ID attr_unique_id: {self._attr_unique_id}.")
-        OcppLog.log_w(f"Connector description key: {self.entity_description.key}.")
+        #OcppLog.log_w(f"TIPO CONNECTOR: {type(self.target)}.")
+        #OcppLog.log_w(f"Connector VIA DEVICE: ({DOMAIN}, {self._evse.identifier}).")
+        #OcppLog.log_w(f"Connector ID attr_unique_id: {self._attr_unique_id}.")
+        #OcppLog.log_w(f"Connector description key: {self.entity_description.key}.")
 
     @property
     def target(self):
@@ -602,8 +602,8 @@ class EVSEConnectorSwitchEntity(EVSESwitchEntity):
         return self.target.is_available
 
     async def async_turn_off(self, **kwargs: Any) -> None:
-        OcppLog.log_w(f"SWITCH CONNECTOR TURN OFF")
-        OcppLog.log_w(f"self.entity_description.off_action_Service_name: {self.entity_description.off_action_service_name}.")
+        #OcppLog.log_w(f"SWITCH CONNECTOR TURN OFF")
+        #OcppLog.log_w(f"self.entity_description.off_action_Service_name: {self.entity_description.off_action_service_name}.")
         # Turn the switch off.
         """Response is True if successful but State is False"""
         if self.entity_description.off_action_service_name is None:
@@ -620,8 +620,8 @@ class EVSEConnectorSwitchEntity(EVSESwitchEntity):
         self._state = not resp
 
     async def async_turn_on(self, **kwargs: Any) -> None:
-        OcppLog.log_w(f"SWITCH CONNECTOR TURN ON")
-        OcppLog.log_w(f"self.entity_description.on_action_Service_name: {self.entity_description.on_action_service_name}.")
+        #OcppLog.log_w(f"SWITCH CONNECTOR TURN ON")
+        #OcppLog.log_w(f"self.entity_description.on_action_Service_name: {self.entity_description.on_action_service_name}.")
         # Turn the switch on.
         self._state = await self.target.call_ha_service(
             service_name=self.entity_description.on_action_service_name,
