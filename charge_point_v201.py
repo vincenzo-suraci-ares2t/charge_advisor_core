@@ -347,7 +347,7 @@ class HomeAssistantChargePointV201(ChargingStationV201, HomeAssistantEntityMetri
 
         self._updating_entities = False
 
-        OcppLog.log_i(f"Aggiornamento delle entità HA terminato correttamente.")
+        #OcppLog.log_i(f"Aggiornamento delle entità HA terminato correttamente.")
 
 
 
@@ -368,7 +368,7 @@ class HomeAssistantChargePointV201(ChargingStationV201, HomeAssistantEntityMetri
             case HAChargePointServices.service_availability.name:
                 resp = await self.set_availability(state, int(evse_id), connector_id)
             case HAChargePointServices.service_charge_start.name:
-                resp = await self.start_transaction_request(evse_id=evse_id)
+                resp = await self.start_transaction_request(evse_id=1)
             case HAChargePointServices.service_charge_stop.name:
                 resp = await self.stop_transaction_request(transaction_id)
             case HAChargePointServices.service_reset.name:
@@ -376,9 +376,9 @@ class HomeAssistantChargePointV201(ChargingStationV201, HomeAssistantEntityMetri
             case HAChargePointServices.service_unlock.name:
                 resp = await self.unlock(evse_id)
             case HAChargePointServices.service_set_charge_rate:
-                resp = await self.set_charge_rate(evse_id=evse_id,limit_amps=0)
+                resp = await self.set_charge_rate(evse_id = evse_id, limit_amps=0)
             case _:
-                OcppLog.log_e(f"Home Assistant Service {service_name} is unknown")
+                OcppLog.log_d(f"{service_name} unknown")
         return resp
 
     async def async_update_ha_device_info(self, boot_info: dict):

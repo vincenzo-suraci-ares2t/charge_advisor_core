@@ -531,9 +531,12 @@ class ChargePointMetric(RestoreSensor, SensorEntity):
         # Return the native unit of measurement.
         uom = self.target.get_metric_ha_unit(self._metric_key)
         if uom is not None:
+
             self._attr_native_unit_of_measurement = uom
         else:
-            self._attr_native_unit_of_measurement = DEFAULT_CLASS_UNITS_HA.get(self.device_class)
+            self._attr_native_unit_of_measurement = DEFAULT_CLASS_UNITS_HA.get(
+                self.device_class
+            )
         return self._attr_native_unit_of_measurement
 
     """
@@ -547,16 +550,13 @@ class ChargePointMetric(RestoreSensor, SensorEntity):
     async def async_added_to_hass(self) -> None:
         # Handle entity which will be added.
         await super().async_added_to_hass()
+
         if restored := await self.async_get_last_sensor_data():
-            # ----------------------------------------------------------------------------------------------------------
             # Recuperiamo il valore solo se i sensori sono di categoria DIAGNOSTIC
-            # ----------------------------------------------------------------------------------------------------------
             if self.entity_description.entity_category == EntityCategory.DIAGNOSTIC:
                 self._attr_native_value = restored.native_value
-            # ----------------------------------------------------------------------------------------------------------
-            # Recuperiamo l'unità di misura di tutti i sensori
-            # ----------------------------------------------------------------------------------------------------------
             self._attr_native_unit_of_measurement = restored.native_unit_of_measurement
+
         async_dispatcher_connect(
             self._hass, DATA_UPDATED, self._schedule_immediate_update
         )
