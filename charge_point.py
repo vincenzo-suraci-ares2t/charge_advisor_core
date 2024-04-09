@@ -267,10 +267,14 @@ class HomeAssistantChargePoint(ChargingStation, HomeAssistantEntityMetrics):
     async def update_ha_entities(self):
 
         while self._adding_entities or self._updating_entities:
-            OcppLog.log_d(
-                f"{self.id} adding entities: {self._adding_entities} updating entites: {self._updating_entities}. Waiting 1 sec"
-            )
-            await asyncio.sleep(1)
+            msg = f"Charge Point {self.id} is already "
+            if self._adding_entities:
+                msg += "adding"
+            elif self._updating_entities:
+                msg += "updating"
+            msg += f" its own Home Assistant entities > Waiting {HA_UPDATE_ENTITIES_WAITING_SECS} sec"
+            OcppLog.log_w(msg)
+            await asyncio.sleep(HA_UPDATE_ENTITIES_WAITING_SECS)
 
         self._updating_entities = True
 
@@ -321,7 +325,7 @@ class HomeAssistantChargePoint(ChargingStation, HomeAssistantEntityMetrics):
             case HAChargePointServices.service_set_charge_rate:
                 resp = await self.set_charge_rate(connector_id = connector_id, limit_amps=0)
             case _:
-                OcppLog.log_d(f"{service_name} unknown")
+                OcppLog.log_w(f"Home Assistant Charge Point Service {service_name} unknown")
         return resp
 
     async def async_update_ha_device_info(self, boot_info: dict):
@@ -458,9 +462,7 @@ class HomeAssistantChargePoint(ChargingStation, HomeAssistantEntityMetrics):
     # overridden
     async def notify(self, msg: str, params={}):
         await ChargingStation.notify(self, msg, params)
-
-        title = params.get("title", "Ocpp integration")
-
+        title = params.get("title", HA_NOTIFY_TITLE)
         """Notify user via HA web frontend."""
         await self._hass.services.async_call(
             PN_DOMAIN,

@@ -28,7 +28,7 @@ from ocpp_central_system.connector import Connector
 # Local files
 # ----------------------------------------------------------------------------------------------------------------------
 
-from .const import DOMAIN
+from .const import DOMAIN, HA_UPDATE_ENTITIES_WAITING_SECS
 from .metric import HomeAssistantEntityMetrics
 
 
@@ -95,7 +95,14 @@ class HomeAssistantConnector(Connector, HomeAssistantEntityMetrics):
     async def update_ha_entities(self):
 
         while self._adding_entities or self._updating_entities:
-            await asyncio.sleep(1)
+            msg = f"Connector {self.identifier} is already "
+            if self._adding_entities:
+                msg += "adding"
+            elif self._updating_entities:
+                msg += "updating"
+            msg += f" its own Home Assistant entities > Waiting {HA_UPDATE_ENTITIES_WAITING_SECS} sec"
+            OcppLog.log_w(msg)
+            await asyncio.sleep(HA_UPDATE_ENTITIES_WAITING_SECS)
 
         self._updating_entities = True
 

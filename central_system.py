@@ -44,7 +44,6 @@ from .charge_point import HomeAssistantChargePoint
 from .const import *
 from .enums import HACentralSystemServices
 from .logger import OcppLog
-from .config import *
 
 from .charge_point_v201 import HomeAssistantChargePointV201
 
@@ -213,7 +212,16 @@ class HomeAssistantCentralSystem(ChargingStationManagementSystem, HomeAssistantE
         # Ho aggiunto questo check, nel caso in cui differenti Charge Point richiamino contemporaneamente questa
         # funzione. Nel caso in cui ciò avvenga, le chiamate avvengono in maniera sequenziale
         while self._adding_entities or self._updating_entities:
-            await asyncio.sleep(1)
+            msg = f"Central System is already "
+            if self._adding_entities:
+                msg += "adding"
+            elif self._updating_entities:
+                msg += "updating"
+            msg += f" its own Home Assistant entities > Waiting {HA_UPDATE_ENTITIES_WAITING_SECS} sec"
+            OcppLog.log_w(msg)
+            await asyncio.sleep(HA_UPDATE_ENTITIES_WAITING_SECS)    
+    
+            
 
         self._adding_entities = True
 
@@ -285,7 +293,7 @@ class HomeAssistantCentralSystem(ChargingStationManagementSystem, HomeAssistantE
             service_name: str,
             state: bool = True,
     ):
-        OcppLog.log_d(f"Calling service {service_name}")
+        #OcppLog.log_d(f"Calling service {service_name}")
         resp = False
         match service_name:
             case HACentralSystemServices.service_ems_communication_start.name:
@@ -293,7 +301,7 @@ class HomeAssistantCentralSystem(ChargingStationManagementSystem, HomeAssistantE
             case HACentralSystemServices.service_ems_communication_stop.name:
                 resp = await self.stop_ems_communication()
             case _:
-                OcppLog.log_d(f"{service_name} unknown")
+                OcppLog.log_w(f"Home Assistant Central System service {service_name} unknown")
         return resp
 
     async def start_ems_communication(self):

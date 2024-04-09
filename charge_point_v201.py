@@ -272,7 +272,7 @@ class HomeAssistantChargePointV201(ChargingStationV201, HomeAssistantEntityMetri
         except NotImplementedError as e:
             OcppLog.log_e(f"Configuration of the charger failed: {e}")
 
-        OcppLog.log_d(f"Post_connect HA terminata correttamente.")
+        #OcppLog.log_d(f"Post_connect HA terminata correttamente.")
 
         self._booting = False
 
@@ -288,12 +288,15 @@ class HomeAssistantChargePointV201(ChargingStationV201, HomeAssistantEntityMetri
     # its EVSE Home Assistant Entities
     async def update_ha_entities(self):
 
-
         while self._adding_entities or self._updating_entities:
-            OcppLog.log_d(
-                f"{self.id} adding entities: {self._adding_entities} updating entites: {self._updating_entities}. Waiting 1 sec"
-            )
-            await asyncio.sleep(1)
+            msg = f"Charging Station {self.id} is already "
+            if self._adding_entities:
+                msg += "adding"
+            elif self._updating_entities:
+                msg += "updating"
+            msg += f" its own Home Assistant entities > Waiting {HA_UPDATE_ENTITIES_WAITING_SECS} sec"
+            OcppLog.log_w(msg)
+            await asyncio.sleep(HA_UPDATE_ENTITIES_WAITING_SECS)
 
 
         self._updating_entities = True
@@ -529,9 +532,7 @@ class HomeAssistantChargePointV201(ChargingStationV201, HomeAssistantEntityMetri
     # overridden
     async def notify(self, msg: str, params={}):
         await ChargingStationV201.notify(self, msg, params)
-
-        title = params.get("title", "Ocpp integration")
-
+        title = params.get("title", HA_NOTIFY_TITLE)
         """Notify user via HA web frontend."""
         await self._hass.services.async_call(
             PN_DOMAIN,

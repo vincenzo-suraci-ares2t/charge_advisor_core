@@ -141,10 +141,14 @@ class HomeAssistantEVSE(EVSE, HomeAssistantEntityMetrics):
     async def update_ha_entities(self):
 
         while self._adding_entities or self._updating_entities:
-            OcppLog.log_d(
-                f"{self.id} adding entities: {self._adding_entities} updating entites: {self._updating_entities}. Waiting 1 sec"
-            )
-            await asyncio.sleep(1)
+            msg = f"EVSE {self.identifier} is already "
+            if self._adding_entities:
+                msg += "adding"
+            elif self._updating_entities:
+                msg += "updating"
+            msg += f" its own Home Assistant entities > Waiting {HA_UPDATE_ENTITIES_WAITING_SECS} sec"
+            OcppLog.log_w(msg)
+            await asyncio.sleep(HA_UPDATE_ENTITIES_WAITING_SECS)
 
         self._updating_entities = True
 
@@ -212,9 +216,7 @@ class HomeAssistantEVSE(EVSE, HomeAssistantEntityMetrics):
     # overridden
     async def notify(self, msg: str, params={}):
         await ChargingStation.notify(self, msg, params)
-
-        title = params.get("title", "Ocpp integration")
-
+        title = params.get("title", HA_NOTIFY_TITLE)
         """Notify user via HA web frontend."""
         await self._hass.services.async_call(
             PN_DOMAIN,

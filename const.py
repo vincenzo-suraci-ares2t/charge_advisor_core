@@ -31,6 +31,12 @@ from ocpp_central_system.const import *
 
 from .enums import HAChargePointSensors
 
+# Number of seconds to wait in case an Home Assistant element is already updating od adding its own entities
+HA_UPDATE_ENTITIES_WAITING_SECS = 1
+
+# Home Assistant Notify Title
+HA_NOTIFY_TITLE = "Charge Advisor"
+
 # Home Assistant Energy and Power UoM
 HA_ENERGY_UNIT = UnitOfMeasure.kwh.value
 HA_POWER_UNIT = UnitOfMeasure.kw.value
