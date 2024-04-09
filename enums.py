@@ -27,7 +27,7 @@ class HACentralSystemServices(str, Enum):
     service_ems_communication_stop = "ems_communication_stop"
 
 class HAChargePointServices(str, Enum):
-    """Charger status conditions to report in home assistant."""
+    """Charging Station status conditions to report in home assistant."""
 
     # For HA service reference and for function to call use .value
     service_charge_start = "start_transaction"

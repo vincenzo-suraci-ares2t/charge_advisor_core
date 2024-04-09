@@ -1,4 +1,4 @@
-"""Custom integration for Chargers that support the Open Charge Point Protocol."""
+"""Charge Advisor integration for Charging Stations that support the Open Charge Point Protocol v1.6 or v2.0.1"""
 # ----------------------------------------------------------------------------------------------------------------------
 # Python packages
 # ----------------------------------------------------------------------------------------------------------------------

@@ -261,9 +261,12 @@ class HomeAssistantEVSE(EVSE, HomeAssistantEntityMetrics):
     def is_available_for_charging(self):
         return super().is_available_for_charging() and self.is_available()
 
-
     def is_available(self):
         return self._charge_point.is_available
+
+    async def set_generated_transaction_id(self):
+        await super().set_generated_transaction_id()
+        await self.update_ha_entities()
 
     ####################################################################################################################
     # Metodo per gestire le istruzioni ricevute dall'interfaccia grafica.

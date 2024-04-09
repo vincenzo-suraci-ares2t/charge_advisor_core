@@ -72,6 +72,13 @@ class HomeAssistantConnector(Connector, HomeAssistantEntityMetrics):
     def is_available_for_charging(self):
         return super().is_available_for_charging() and self.is_available()
 
+    # overridden
+    # Questa funzione fa overridden della controparte presente nel package ocpp-central-system
+    # Permette di generare un Transaction id
+    async def set_generated_transaction_id(self):
+        await super().set_generated_transaction_id()
+        await self.update_ha_entities()
+
     # ------------------------------------------------------------------------------------------------------------------
     # Home Assistant Methods
     # ------------------------------------------------------------------------------------------------------------------

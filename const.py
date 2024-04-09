@@ -69,6 +69,7 @@ DEFAULT_CLASS_UNITS_HA = {
     SensorDeviceClass.BATTERY: ha.PERCENTAGE,
     SensorDeviceClass.POWER: ha.UnitOfPower.KILO_WATT,
     SensorDeviceClass.ENERGY: ha.UnitOfEnergy.KILO_WATT_HOUR,
+    SensorDeviceClass.DURATION: ha.UnitOfTime.SECONDS,
 }
 
 # Home Assistant to OCPP UoM mapping
