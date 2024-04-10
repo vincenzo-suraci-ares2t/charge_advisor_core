@@ -493,9 +493,9 @@ class EVSESwitchEntity(ChargePointSwitchEntity):
             identifiers={(DOMAIN, self._evse.identifier)},
             #via_device=(DOMAIN, self._charge_point.id),
         )
-        OcppLog.log_w(f"EVSE VIA DEVICE: ({DOMAIN}, {self._charge_point.id}).")
-        OcppLog.log_w(f"EVSE ID attr_unique_id: {self._attr_unique_id}.")
-        OcppLog.log_w(f"EVSE description key: {self.entity_description.key}.")
+        #OcppLog.log_w(f"EVSE VIA DEVICE: ({DOMAIN}, {self._charge_point.id}).")
+        #OcppLog.log_w(f"EVSE ID attr_unique_id: {self._attr_unique_id}.")
+        #OcppLog.log_w(f"EVSE description key: {self.entity_description.key}.")
 
     @property
     def target(self):
