@@ -175,7 +175,12 @@ class HomeAssistantCentralSystem(ChargingStationManagementSystem, HomeAssistantE
             self._charge_advisor_handler.notify_new_cp_status(data)
         )
 
-    def async_create_remote_start_transaction_task(self, charge_point, connector_id, id_tag: str | None = None):
+    def async_create_remote_start_transaction_task(
+            self,
+            charge_point,
+            connector_id,
+            id_tag: str | None = None
+    ):
         return self._hass.async_create_task(
             charge_point.remote_start_transaction(
                 connector_id,

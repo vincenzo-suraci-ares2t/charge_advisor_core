@@ -476,14 +476,6 @@ class HomeAssistantChargePointV201(ChargingStationV201, HomeAssistantEntityMetri
         )
 
     # overridden
-    """def create_remote_start_transaction_task(self):
-        self._hass.async_create_task(self.update_ha_entities())
-
-    # overridden
-    def create_remote_stop_transaction_task(self):
-        self._hass.async_create_task(self.update_ha_entities())"""
-
-    # overridden
     async def force_smart_charging(self):
         return self._config_entry.data.get(
                 CONF_FORCE_SMART_CHARGING,

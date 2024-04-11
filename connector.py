@@ -75,9 +75,9 @@ class HomeAssistantConnector(Connector, HomeAssistantEntityMetrics):
     # overridden
     # Questa funzione fa overridden della controparte presente nel package ocpp-central-system
     # Permette di generare un Transaction id
-    async def set_generated_transaction_id(self):
-        await super().set_generated_transaction_id()
-        await self.update_ha_entities()
+    def set_generated_transaction_id(self):
+        super().set_generated_transaction_id()
+        self._hass.async_create_task(self.update_ha_entities())
 
     # ------------------------------------------------------------------------------------------------------------------
     # Home Assistant Methods
