@@ -162,17 +162,17 @@ class HomeAssistantCentralSystem(ChargingStationManagementSystem, HomeAssistantE
 
     def async_create_notify_end_of_charge_task(self, data):
         self._hass.async_create_task(
-            self._charge_advisor_handler.notify_end_of_charge(data)
+            self.charge_advisor_handler.notify_end_of_charge(data)
         )
 
     def async_create_notify_start_of_charge_task(self, data):
         self._hass.async_create_task(
-            self._charge_advisor_handler.notify_start_of_charge(data)
+            self.charge_advisor_handler.notify_start_of_charge(data)
         )
 
     def async_create_notify_new_cp_status_task(self, data):
         self._hass.async_create_task(
-            self._charge_advisor_handler.notify_new_cp_status(data)
+            self.charge_advisor_handler.notify_new_cp_status(data)
         )
 
     def async_create_remote_start_transaction_task(

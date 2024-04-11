@@ -330,7 +330,8 @@ class HomeAssistantChargePointV201(ChargingStationV201, HomeAssistantEntityMetri
         for evse in self._evses:
             #OcppLog.log_w(f"HA-EVSE in esame: {evse}.")
             #OcppLog.log_w(f"Entità registrate nell'EVSE in esame: {evse.ha_entity_unique_ids}.")
-            ev_dev = dr.async_get_device({(DOMAIN, evse.identifier)})
+            identifiers = {(DOMAIN, evse.identifier)}
+            ev_dev = dr.async_get_device(identifiers)
             # OcppLog.log_w(f"Device EVSE associato: {ev_dev}.")
             for ev_ent in entity_registry.async_entries_for_device(er, ev_dev.id):
                 if ev_ent.unique_id not in evse.ha_entity_unique_ids:
@@ -409,6 +410,10 @@ class HomeAssistantChargePointV201(ChargingStationV201, HomeAssistantEntityMetri
     # ------------------------------------------------------------------------------------------------------------------
     # Event Loop Tasks
     # ------------------------------------------------------------------------------------------------------------------
+
+    # overridden
+    def create_remote_stop_transaction_task(self):
+        self._hass.async_create_task(self.update_ha_entities())
 
     # overridden
     def create_evse_task(self, evse_id: int):
