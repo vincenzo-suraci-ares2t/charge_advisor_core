@@ -213,9 +213,9 @@ class HomeAssistantChargePointV201(ChargingStationV201, HomeAssistantEntityMetri
 
                 # await ChargingStationV201.post_connect(self)
 
-                OcppLog.log_w(f"Lancio post_connect ORIGINALE.")
+                #OcppLog.log_w(f"Lancio post_connect ORIGINALE.")
                 await super().post_connect()
-                OcppLog.log_w(f"Post_connect ORIGINALE terminata correttamente.")
+                #OcppLog.log_w(f"Post_connect ORIGINALE terminata correttamente.")
 
                 self._booting = True
 
@@ -419,6 +419,7 @@ class HomeAssistantChargePointV201(ChargingStationV201, HomeAssistantEntityMetri
 
     # overridden
     def create_evse_task(self, evse_id: int):
+
         ha_evse = HomeAssistantEVSE(
             id=str(evse_id),
             hass=self._hass,
@@ -426,9 +427,9 @@ class HomeAssistantChargePointV201(ChargingStationV201, HomeAssistantEntityMetri
             charge_point=self
         )
 
-        OcppLog.log_w(f"EVSE di nome {ha_evse.identifier} aggiunto correttamente al registro dispositivi.")
-        OcppLog.log_w(f"Creazione EVSE integrato...")
-        OcppLog.log_w(f"EVSE integrato creato correttamente.")
+        #OcppLog.log_w(f"EVSE di nome {ha_evse.identifier} aggiunto correttamente al registro dispositivi.")
+        #OcppLog.log_w(f"Creazione EVSE integrato...")
+        #OcppLog.log_w(f"EVSE integrato creato correttamente.")
         return ha_evse
 
     def create_trigger_status_notification_task(self, evse_id):
