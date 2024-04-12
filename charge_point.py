@@ -411,6 +411,10 @@ class HomeAssistantChargePoint(ChargingStation, HomeAssistantEntityMetrics):
         self._hass.async_create_task(self.update_ha_entities())
 
     # overridden
+    def post_on_meter_values(self):
+        self._hass.async_create_task(self.update_ha_entities())
+
+    # overridden
     def create_remote_stop_transaction_task(self):
         self._hass.async_create_task(self.update_ha_entities())
 

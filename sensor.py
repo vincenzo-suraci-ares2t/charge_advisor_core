@@ -106,7 +106,7 @@ class OcppSensor:
     def get_charge_point_entities(hass, charge_point: ChargePoint):
 
         # Recupero della Central System
-        central_system = charge_point.central
+        central_system = charge_point.central_system
 
         # --------------------------------------------------------------------------------------------------------------
         # Sensori associati al Charge Point

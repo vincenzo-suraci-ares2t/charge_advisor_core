@@ -354,7 +354,7 @@ class HomeAssistantChargePointV201(ChargingStationV201, HomeAssistantEntityMetri
         #OcppLog.log_i(f"Aggiornamento delle entità HA terminato correttamente.")
 
     # overridden
-    def post_start_transaction_event(self):
+    async def post_start_transaction_event(self):
         self._hass.async_create_task(self.update_ha_entities())
 
     async def add_ha_entities(self):

@@ -80,6 +80,10 @@ class HomeAssistantCentralSystem(ChargingStationManagementSystem, HomeAssistantE
             super()._get_init_skip_schema_validation()
         )
 
+    # Questa funzione fa Overriding della funzione padre, per permette di personalizzare la Load Area Id
+    # che deve restituire la Charging Station Management System (ovvero la Central System) al Charge Advisor Backend
+    # In particolare, in Home Assistant viene restituita la stringa che viene imputata nella GUI andando nel menù in:
+    # Impostazioni > Sistema > Generale, nella casella "Nome"
     def _get_default_load_area_id(self):
         return self._hass.config.as_dict().get(
             "location_name",
