@@ -49,7 +49,10 @@ from .charge_point_v201 import HomeAssistantChargePointV201
 
 
 
-class HomeAssistantCentralSystem(ChargingStationManagementSystem, HomeAssistantEntityMetrics):
+class HomeAssistantCentralSystem(
+    ChargingStationManagementSystem,
+    HomeAssistantEntityMetrics
+):
     
     """Home Assistant representation of a Central System """
 
@@ -228,9 +231,7 @@ class HomeAssistantCentralSystem(ChargingStationManagementSystem, HomeAssistantE
                 msg += "updating"
             msg += f" its own Home Assistant entities > Waiting {HA_UPDATE_ENTITIES_WAITING_SECS} sec"
             OcppLog.log_w(msg)
-            await asyncio.sleep(HA_UPDATE_ENTITIES_WAITING_SECS)    
-    
-            
+            await asyncio.sleep(HA_UPDATE_ENTITIES_WAITING_SECS)
 
         self._adding_entities = True
 
@@ -358,7 +359,6 @@ class HomeAssistantCentralSystem(ChargingStationManagementSystem, HomeAssistantE
         self._charge_advisor_thread_websocket = None
 
         self.set_metric_value(HACentralSystemServices.service_ems_communication_start.value, False)
-
 
         return True
 

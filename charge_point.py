@@ -79,7 +79,10 @@ TRANS_SERVICE_DATA_SCHEMA = vol.Schema(
     }
 )
 
-class HomeAssistantChargePoint(ChargingStation, HomeAssistantEntityMetrics):
+class HomeAssistantChargePoint(
+    ChargingStation,
+    HomeAssistantEntityMetrics
+):
     """Home Assistant representation of a Charge Point"""
 
     def __init__(
@@ -300,7 +303,7 @@ class HomeAssistantChargePoint(ChargingStation, HomeAssistantEntityMetrics):
         return self._status == STATE_OK
 
     async def add_ha_entities(self):
-        await self._central.add_ha_entities()
+        await self.central_system.add_ha_entities()
 
     async def call_ha_service(
             self,

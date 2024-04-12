@@ -84,7 +84,10 @@ TRANS_SERVICE_DATA_SCHEMA = vol.Schema(
     }
 )
 
-class HomeAssistantChargePointV201(ChargingStationV201, HomeAssistantEntityMetrics):
+class HomeAssistantChargePointV201(
+    ChargingStationV201,
+    HomeAssistantEntityMetrics
+):
     """Home Assistant representation of a Charge Point"""
 
     def __init__(
@@ -280,10 +283,6 @@ class HomeAssistantChargePointV201(ChargingStationV201, HomeAssistantEntityMetri
     # HOME ASSISTANT METHODS
     # ------------------------------------------------------------------------------------------------------------------
 
-    async def add_new_entities(self):
-        await self.add_ha_entities()
-
-
     # Updates the Charge Point Home Assistant Entities and
     # its EVSE Home Assistant Entities
     async def update_ha_entities(self):
@@ -358,7 +357,7 @@ class HomeAssistantChargePointV201(ChargingStationV201, HomeAssistantEntityMetri
         self._hass.async_create_task(self.update_ha_entities())
 
     async def add_ha_entities(self):
-        await self._central.add_ha_entities()
+        await self.central_system.add_ha_entities()
 
     async def call_ha_service(
             self,
@@ -582,18 +581,14 @@ class HomeAssistantChargePointV201(ChargingStationV201, HomeAssistantEntityMetri
 
     # overridden
     async def reconnect(self, connection):
-        OcppLog.log_w(f"INIZIO RECONNECT INTEGRATO...")
         # Indichiamo lo stato Home Assistant di nuovo disponibile
         self._status = STATE_OK
         await super().reconnect(connection)
-        OcppLog.log_w(f"RECONNECT INTEGRATO CONCLUSO.")
 
     @on(Action.NotifyReport)
-    def on_notify_report(self, request_id, generated_at, tbc, seq_no, report_data, **kwargs):
+    async def on_notify_report(self, request_id, generated_at, tbc, seq_no, report_data, **kwargs):
         res = super().on_notify_report(request_id, generated_at, tbc, seq_no, report_data, **kwargs)
         if not tbc:
-            OcppLog.log_e("Invio report concluso, aggiornamento delle entità nell'integrazione...")
-            self._hass.async_create_task(self.add_new_entities())
+            self._hass.async_create_task(self.add_ha_entities())
             self._hass.async_create_task(self.update_ha_entities())
-            # self._notify_report_ok = True
         return res
