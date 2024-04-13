@@ -15,7 +15,7 @@ import asyncio
 import voluptuous as vol
 
 from ocpp.exceptions import NotImplementedError
-from ocpp.v201.enums import Action, AttributeType
+from ocpp.v201.enums import Action, ConnectorStatusType, OperationalStatusType
 from ocpp.routing import on
 
 # from .ocpp_central_system.ocpp_central_system.enums import Profiles
@@ -33,8 +33,8 @@ import homeassistant.helpers.config_validation as cv
 # Local packages
 # ----------------------------------------------------------------------------------------------------------------------
 
-from ocpp_central_system.ComponentsV201.charging_station_2_0_1 import ChargingStationV201
-from ocpp_central_system.ComponentsV201.enums_v201 import TierLevel
+from ocpp_central_system.ComponentsV201.charging_station_v201 import ChargingStationV201
+from ocpp_central_system.enums import EVSEStatus
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Local files
@@ -43,8 +43,8 @@ from ocpp_central_system.ComponentsV201.enums_v201 import TierLevel
 from .const import *
 from .enums import *
 from .logger import OcppLog
-from .metric import HomeAssistantEntityMetrics
-from .evse import HomeAssistantEVSE
+from .ha_metric import HomeAssistantEntityMetrics
+from .ha_evse import HomeAssistantEVSEV201
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Home Assistant Voluptuous SCHEMAS
@@ -84,17 +84,20 @@ TRANS_SERVICE_DATA_SCHEMA = vol.Schema(
     }
 )
 
-class HomeAssistantChargePointV201(ChargingStationV201, HomeAssistantEntityMetrics):
+class HomeAssistantChargingStationV201(
+    ChargingStationV201,
+    HomeAssistantEntityMetrics
+):
     """Home Assistant representation of a Charge Point"""
 
     def __init__(
-            self,
-            id: str,
-            connection,
-            hass,
-            config_entry,
-            central,
-            skip_schema_validation: bool = False,
+        self,
+        id: str,
+        connection,
+        hass,
+        config_entry,
+        central,
+        skip_schema_validation: bool = False,
     ):
 
         OcppLog.log_i(f"Creazione di una Charging Station che utilizza il protocollo OCPP 2.0.1.")
@@ -141,15 +144,6 @@ class HomeAssistantChargePointV201(ChargingStationV201, HomeAssistantEntityMetri
 
     # overridden
     async def post_connect(self):
-
-        OcppLog.log_w(f"Lancio post_connect HA.")
-
-        # OcppLog.log_d("Triggering boot notification!!!")
-        # await self.trigger_boot_notification()
-
-        # await super().post_connect()
-
-        # await asyncio.sleep(10)
 
         """Logic to be executed right after a charger connects."""
 
@@ -358,7 +352,7 @@ class HomeAssistantChargePointV201(ChargingStationV201, HomeAssistantEntityMetri
         self._hass.async_create_task(self.update_ha_entities())
 
     async def add_ha_entities(self):
-        await self._central.add_ha_entities()
+        await self.central_system.add_ha_entities()
 
     async def call_ha_service(
             self,
@@ -374,7 +368,7 @@ class HomeAssistantChargePointV201(ChargingStationV201, HomeAssistantEntityMetri
             case HAChargePointServices.service_availability.name:
                 resp = await self.set_availability(state, evse_id, connector_id)
             case HAChargePointServices.service_charge_start.name:
-                resp = await self.start_transaction_request(evse_id=evse_id)
+                resp = await self.start_transaction_request(evse_id=evse_id,connector_id=connector_id)
             case HAChargePointServices.service_charge_stop.name:
                 resp = await self.stop_transaction_request(transaction_id)
             case HAChargePointServices.service_reset.name:
@@ -420,7 +414,7 @@ class HomeAssistantChargePointV201(ChargingStationV201, HomeAssistantEntityMetri
     # overridden
     def create_evse_task(self, evse_id: int):
 
-        ha_evse = HomeAssistantEVSE(
+        ha_evse = HomeAssistantEVSEV201(
             id=str(evse_id),
             hass=self._hass,
             config_entry=self._config_entry,
@@ -499,7 +493,7 @@ class HomeAssistantChargePointV201(ChargingStationV201, HomeAssistantEntityMetri
 
     # overridden
     async def get_evse_instance(self, evse_id):
-        ha_evse = HomeAssistantEVSE(
+        ha_evse = HomeAssistantEVSEV201(
             hass=self._hass,
             charge_point=self,
             id=evse_id,
@@ -563,6 +557,29 @@ class HomeAssistantChargePointV201(ChargingStationV201, HomeAssistantEntityMetri
     # overridden
     async def stop(self):
         self._status = STATE_UNAVAILABLE
+        self.set_availability_metric_value(False)
+        for evse in self.evses:
+            evse.set_availability_state(
+                ConnectorStatusType.unavailable.value
+            )
+            evse.set_metric_value(
+                EVSEStatus.availability.value,
+                OperationalStatusType.inoperative.value
+            )
+            for connector in evse.connectors:
+                connector.set_availability_state(
+                    ConnectorStatusType.unavailable.value
+                )
+                await asyncio.create_task(
+                    self.central_system.notify_point_of_delivery_status_to_charge_advisor_backend(
+                        charging_station_id=self.id,
+                        evse_id=evse.id,
+                        connector_id=connector.id,
+                        status=ConnectorStatusType.unavailable.value,
+                        ocpp_version=self.ocpp_protocol_version()
+                    )
+                )
+        await self.update_ha_entities()
         await super().stop()
 
     # overridden
@@ -582,18 +599,14 @@ class HomeAssistantChargePointV201(ChargingStationV201, HomeAssistantEntityMetri
 
     # overridden
     async def reconnect(self, connection):
-        OcppLog.log_w(f"INIZIO RECONNECT INTEGRATO...")
         # Indichiamo lo stato Home Assistant di nuovo disponibile
         self._status = STATE_OK
         await super().reconnect(connection)
-        OcppLog.log_w(f"RECONNECT INTEGRATO CONCLUSO.")
 
     @on(Action.NotifyReport)
     def on_notify_report(self, request_id, generated_at, tbc, seq_no, report_data, **kwargs):
         res = super().on_notify_report(request_id, generated_at, tbc, seq_no, report_data, **kwargs)
         if not tbc:
-            OcppLog.log_e("Invio report concluso, aggiornamento delle entità nell'integrazione...")
             self._hass.async_create_task(self.add_new_entities())
             self._hass.async_create_task(self.update_ha_entities())
-            # self._notify_report_ok = True
         return res

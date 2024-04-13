@@ -120,7 +120,7 @@ from ocpp.v16.enums import AuthorizationStatus
 # Local files
 # ----------------------------------------------------------------------------------------------------------------------
 
-from .central_system import HomeAssistantCentralSystem
+from .ha_central_system import HomeAssistantCentralSystem
 from .const import *
 
 

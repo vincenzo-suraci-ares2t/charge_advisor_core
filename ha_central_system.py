@@ -39,17 +39,17 @@ from ocpp_central_system.charging_station_management_system import ChargingStati
 # Local files
 # ----------------------------------------------------------------------------------------------------------------------
 
-from .metric import HomeAssistantEntityMetrics
-from .charge_point import HomeAssistantChargePoint
+from .ha_metric import HomeAssistantEntityMetrics
+from .ha_charge_point import HomeAssistantChargePoint
 from .const import *
 from .enums import HACentralSystemServices
 from .logger import OcppLog
+from .ha_charging_station_v201 import HomeAssistantChargingStationV201
 
-from .charge_point_v201 import HomeAssistantChargePointV201
-
-
-
-class HomeAssistantCentralSystem(ChargingStationManagementSystem, HomeAssistantEntityMetrics):
+class HomeAssistantCentralSystem(
+    ChargingStationManagementSystem,
+    HomeAssistantEntityMetrics
+):
     
     """Home Assistant representation of a Central System """
 
@@ -164,26 +164,11 @@ class HomeAssistantCentralSystem(ChargingStationManagementSystem, HomeAssistantE
         entry = params.get("entry")
         return HomeAssistantCentralSystem(hass, entry)
 
-    def async_create_notify_end_of_charge_task(self, data):
-        self._hass.async_create_task(
-            self.charge_advisor_handler.notify_end_of_charge(data)
-        )
-
-    def async_create_notify_start_of_charge_task(self, data):
-        self._hass.async_create_task(
-            self.charge_advisor_handler.notify_start_of_charge(data)
-        )
-
-    def async_create_notify_new_cp_status_task(self, data):
-        self._hass.async_create_task(
-            self.charge_advisor_handler.notify_new_cp_status(data)
-        )
-
     def async_create_remote_start_transaction_task(
-            self,
-            charge_point,
-            connector_id,
-            id_tag: str | None = None
+        self,
+        charge_point,
+        connector_id,
+        id_tag: str | None = None
     ):
         return self._hass.async_create_task(
             charge_point.remote_start_transaction(
@@ -192,14 +177,23 @@ class HomeAssistantCentralSystem(ChargingStationManagementSystem, HomeAssistantE
             )
         )
 
-    def async_create_remote_stop_transaction_task(self, charge_point, transaction_id):
+    def async_create_remote_stop_transaction_task(
+        self,
+        charge_point,
+        transaction_id
+    ):
         self._hass.async_create_task(
             charge_point.remote_stop_transaction(
                 transaction_id
             )
         )
 
-    def async_create_set_max_charge_rate_task(self, conn, limit_list, start_of_schedule):
+    def async_create_set_max_charge_rate_task(
+        self,
+        conn,
+        limit_list,
+        start_of_schedule
+    ):
         self._hass.async_create_task(
             conn.set_max_charge_rate(
                 limit_list=limit_list,
@@ -252,7 +246,7 @@ class HomeAssistantCentralSystem(ChargingStationManagementSystem, HomeAssistantE
 
     async def get_charge_point_instance(self, cp_id, websocket):
         # Create an instance of HomeAssistantChargePoint class
-        hacp = HomeAssistantChargePoint(
+        ha_charge_point = HomeAssistantChargePoint(
             cp_id,
             websocket,
             self._hass,
@@ -265,24 +259,24 @@ class HomeAssistantCentralSystem(ChargingStationManagementSystem, HomeAssistantE
             config_entry_id=self._config_entry.entry_id,
             identifiers={(DOMAIN, cp_id)},
             name=cp_id,
-            model="OCPP Charge Point",
+            model="OCPP 1.6 Charge Point",
             via_device=(DOMAIN, self._id),
         )
 
-        return hacp
+        return ha_charge_point
 
-    async def get_charge_point_instance_v201(self, cp_id, websocket):
-        OcppLog.log_w(f"Istanziazione di un Charge Point integrato...")
+    async def get_charging_station_instance(self, cp_id, websocket):
+        #OcppLog.log_w(f"Istanziazione di un Charge Point integrato...")
         # Create an instance of HomeAssistantChargePoint class
-        hacp = HomeAssistantChargePointV201(
+        ha_charging_station = HomeAssistantChargingStationV201(
             id=cp_id,
             connection=websocket,
             hass=self._hass,
             config_entry=self._config_entry,
             central=self
         )
-        OcppLog.log_w(f"ID del Charge Point integrato appena istanziato: {cp_id}.")
-        OcppLog.log_w(f"Aggiunta del Charge Point integrato al registro dispositivi...")
+        #OcppLog.log_w(f"ID del Charge Point integrato appena istanziato: {cp_id}.")
+        #OcppLog.log_w(f"Aggiunta del Charge Point integrato al registro dispositivi...")
         # Create Charge Point Device in Home Assistant
         ha_dr = device_registry.async_get(self._hass)
         ha_dr.async_get_or_create(
@@ -290,12 +284,12 @@ class HomeAssistantCentralSystem(ChargingStationManagementSystem, HomeAssistantE
             identifiers={(DOMAIN, cp_id)},
             name=cp_id,
             # model=hacp.model,
-            model="OCPP 2.0.1 Charge Point",
+            model="OCPP 2.0.1 Charging Station",
             via_device=(DOMAIN, self._id)
             # manufacturer=hacp.vendor
         )
-        OcppLog.log_w(f"Aggiunta del Charge Point integrato al registro dispositivi completata.")
-        return hacp
+        #OcppLog.log_w(f"Aggiunta del Charge Point integrato al registro dispositivi completata.")
+        return ha_charging_station
 
     async def call_ha_service(
             self,
@@ -308,7 +302,7 @@ class HomeAssistantCentralSystem(ChargingStationManagementSystem, HomeAssistantE
             case HACentralSystemServices.service_ems_communication_start.name:
                 resp = await self.start_ems_communication()
             case HACentralSystemServices.service_ems_communication_stop.name:
-                resp = await self.stop_ems_communication()
+                resp = await self.stop_charge_advisor_backend_communication()
             case _:
                 OcppLog.log_w(f"Home Assistant Central System service {service_name} unknown")
         return resp
@@ -349,13 +343,12 @@ class HomeAssistantCentralSystem(ChargingStationManagementSystem, HomeAssistantE
 
         return True
 
-    async def stop_ems_communication(self):
+    async def stop_charge_advisor_backend_communication(self):
 
-        self._charge_advisor_handler.stop_api_client()
-        self._charge_advisor_handler.stop_websocket_client()
+        self.charge_advisor_handler.stop_api_client()
+        self.charge_advisor_handler.stop_websocket_client()
 
-        self._charge_advisor_thread_rest_api = None
-        self._charge_advisor_thread_websocket = None
+        self.stop_charge_advisor_threads()
 
         self.set_metric_value(HACentralSystemServices.service_ems_communication_start.value, False)
 
