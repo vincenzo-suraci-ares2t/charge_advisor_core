@@ -512,6 +512,9 @@ class HomeAssistantChargingStationV201(
 
         return ha_evse
 
+    def is_available(self):
+        return self._status == STATE_OK
+
     # overridden
     async def add_evse(self, evse_id):
         await super().add_evse(evse_id)

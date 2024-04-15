@@ -243,6 +243,7 @@ class HomeAssistantEVSEV201(
 
     # overridden
     def is_available_for_reservation(self):
+        OcppLog.log_w(f"Home Assistant EVSE is available: {self.is_available()}.")
         return super().is_available_for_reservation() and self.is_available()
 
     # overridden
@@ -250,7 +251,7 @@ class HomeAssistantEVSEV201(
         return super().is_available_for_charging() and self.is_available()
 
     def is_available(self):
-        return self._charge_point.is_available
+        return self.charge_point.is_available
 
     ####################################################################################################################
     # Metodo per gestire le istruzioni ricevute dall'interfaccia grafica.
