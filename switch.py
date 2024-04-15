@@ -39,9 +39,10 @@ from .logger import OcppLog
 # At a minimum define switch name and on service call,
 # metric and condition combination can be used to drive switch state, use default to set initial state to True
 @dataclass
-class OcppSwitchDescription(SwitchEntityDescription):
+class OcppSwitchDescription(
+    SwitchEntityDescription
+):
     """Class to describe a Switch entity."""
-
     on_action_service_name: str | None = None
     off_action_service_name: str | None = None
     metric_key: str | None = None
@@ -578,9 +579,7 @@ class EVSEConnectorSwitchEntity(EVSESwitchEntity):
         self._attr_unique_id = ".".join([
             SWITCH_DOMAIN,
             DOMAIN,
-            self._charge_point.id,
-            self._evse.identifier,
-            str(self._connector.identifier),
+            self._connector.identifier,
             self.entity_description.key
             ])
         self._attr_device_info = DeviceInfo(
