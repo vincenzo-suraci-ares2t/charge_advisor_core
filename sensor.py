@@ -103,7 +103,10 @@ class OcppSensor:
 
     # Metodo per il recupero delle entità di tipo Sensore per uno specifico Charge Point
     @staticmethod
-    def get_charge_point_entities(hass, charge_point: ChargePoint):
+    def get_charge_point_entities(
+        hass,
+        charge_point: ChargePoint
+    ):
 
         # Recupero della Central System
         central_system = charge_point.central_system
@@ -168,7 +171,10 @@ class OcppSensor:
                         )
                     )
                 for metric_key in charge_point.measurands:
-                    #OcppLog.log_e(f"Adding measurand .....{metric_key}")
+                    #OcppLog.log_w(f"Adding measurand "
+                    #              f"{metric_key} to Connector #"
+                    #              f"{connector_id} of Charge Point "
+                    #              f"{charge_point.id}")
                     sensors.append(
                         OcppSensorDescription(
                             key=metric_key,
@@ -364,9 +370,12 @@ class OcppSensor:
         return entities
 
 
-#  Static Sensor Platform entities registration done at CONFIG TIME (not at RUNTIME)
+# Static Sensor Platform entities registration done at CONFIG TIME (not at RUNTIME)
 # A workaround to do it at runtime: https://community.home-assistant.io/t/adding-entities-at-runtime/200855/2
 async def async_setup_entry(hass, entry, async_add_devices):
+
+    #OcppLog.log_i("Sensor async_setup_entry called!")
+
     # Configure the sensor platform
     central_system: CentralSystem = hass.data[DOMAIN][entry.entry_id]
 
