@@ -502,7 +502,7 @@ class HomeAssistantChargePoint(
     async def stop(self):
         self._status = STATE_UNAVAILABLE
         self.set_availability(AvailabilityType.inoperative.value)
-        for connector in self.connectors.values:
+        for connector in self.connectors.values():
             connector.set_availability(AvailabilityType.inoperative.value)
             key = HAConnectorSensors.status
             connector.set_metric_value(key, ChargePointStatus.available.value)
@@ -511,7 +511,7 @@ class HomeAssistantChargePoint(
                     charging_station_id=self.id,
                     connector_id=connector.id,
                     status=ChargePointStatus.available.value,
-                    ocpp_version=self.ocpp_protocol_version()
+                    ocpp_version=self.ocpp_protocol_version
                 )
             )
         await self.update_ha_entities()

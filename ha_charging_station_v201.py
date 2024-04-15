@@ -576,7 +576,7 @@ class HomeAssistantChargingStationV201(
                         evse_id=evse.id,
                         connector_id=connector.id,
                         status=ConnectorStatusType.unavailable.value,
-                        ocpp_version=self.ocpp_protocol_version()
+                        ocpp_version=self.ocpp_protocol_version
                     )
                 )
         await self.update_ha_entities()
