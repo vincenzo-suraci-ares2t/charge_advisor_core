@@ -236,7 +236,7 @@ async def async_setup_entry(hass, entry, async_add_devices):
                             desc
                         )
                     )
-                    
+
                 # Aggiungere gli switch dei connettori relativi all'EVSE in esame.
                 for connector in evse.connectors:
                     #OcppLog.log_w(f"Connector in esame: {connector}.")
@@ -584,7 +584,6 @@ class EVSEConnectorSwitchEntity(EVSESwitchEntity):
             self._connector.identifier,
             self.entity_description.key
             ])
-        OcppLog.log_w(f"Switch associato al connettore {self._connector.identifier} con attr_unique_id {self._attr_unique_id}")
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._connector.identifier)}
         )
