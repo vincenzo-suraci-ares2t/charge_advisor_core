@@ -510,13 +510,14 @@ class HomeAssistantChargePoint(
             connector.set_availability(AvailabilityType.inoperative.value)
             # Setto la metrica "Status" del Connettore in "Unavailable" che è un sensore di Home Assistant
             key = HAConnectorSensors.status
-            connector.set_metric_value(key, ChargePointStatus.unavailable.value)
+            value = ChargePointStatus.unavailable.value
+            connector.set_metric_value(key, value)
             # Avviso il Charge Advisor Backend del cambio di stato del Point Of Delivery associato al connettore
             await asyncio.create_task(
                 self.central_system.notify_point_of_delivery_status_to_charge_advisor_backend(
                     charging_station_id=self.id,
                     connector_id=connector.id,
-                    status=ChargePointStatus.available.value,
+                    status=value,
                     ocpp_version=self.ocpp_protocol_version
                 )
             )
