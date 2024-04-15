@@ -309,7 +309,9 @@ class HomeAssistantChargingStationV201(
                 # source: https://github.com/home-assistant/core/blob/dev/homeassistant/helpers/entity_registry.py
                 # source: https://dev-docs.home-assistant.io/en/dev/api/helpers.html#module-homeassistant.helpers.entity_registry
                 # OcppLog.log_d(f"La entità {cp_ent.unique_id} è registrata in Home Assistant ma non è stata configurata dalla integrazione: verrà eliminata.")
-                OcppLog.log_w(f"Entità {cp_ent.unique_id} associata al Charge Point non trovata, rimozione...")
+                OcppLog.log_w(f"L'entità Home Assistant "
+                              f"{cp_ent.unique_id} associata al Charge Point "
+                              f"{self.id} non è trovata, pertanto verrà rimossa")
                 er.async_remove(
                     entity_id=cp_ent.entity_id
                 )

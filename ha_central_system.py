@@ -310,17 +310,14 @@ class HomeAssistantCentralSystem(
     async def start_ems_communication(self):
 
         if self._charge_advisor_thread_rest_api is None:
-
             self._charge_advisor_thread_rest_api = Thread(
                 target=self._start_charge_advisor_handler_rest_api
             )
-
             self._charge_advisor_thread_rest_api.start()
             self._charge_advisor_thread_rest_api = None
         else:
             self._charge_advisor_handler.stop_api_client()
             self._charge_advisor_thread_rest_api = None
-
             OcppLog.log_w("Il Thread for the API client is already in execution")
             OcppLog.log_w("Stopping old one ...")
             return True
