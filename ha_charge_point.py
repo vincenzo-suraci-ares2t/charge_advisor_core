@@ -24,12 +24,13 @@ from homeassistant.components.persistent_notification import DOMAIN as PN_DOMAIN
 from homeassistant.const import STATE_OK, STATE_UNAVAILABLE
 from homeassistant.helpers import device_registry, entity_component, entity_registry
 import homeassistant.helpers.config_validation as cv
+from ocpp.v16.enums import AvailabilityType, ChargePointStatus
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Local packages
 # ----------------------------------------------------------------------------------------------------------------------
 
-from ocpp_central_system.charging_station import ChargingStation
+from ocpp_central_system.charge_point import ChargePoint
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Local files
@@ -38,8 +39,8 @@ from ocpp_central_system.charging_station import ChargingStation
 from .const import *
 from .enums import *
 from .logger import OcppLog
-from .metric import HomeAssistantEntityMetrics
-from .connector import HomeAssistantConnector
+from .ha_metric import HomeAssistantEntityMetrics
+from .ha_connector import HomeAssistantConnector
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Home Assistant Voluptuous SCHEMAS
@@ -80,19 +81,19 @@ TRANS_SERVICE_DATA_SCHEMA = vol.Schema(
 )
 
 class HomeAssistantChargePoint(
-    ChargingStation,
+    ChargePoint,
     HomeAssistantEntityMetrics
 ):
     """Home Assistant representation of a Charge Point"""
 
     def __init__(
-            self,
-            id: str,
-            connection,
-            hass,
-            config_entry,
-            central,
-            skip_schema_validation: bool = False,
+        self,
+        id: str,
+        connection,
+        hass,
+        config_entry,
+        central,
+        skip_schema_validation: bool = False,
     ):
 
         # --------------------------------------------------------------------------------------------------------------
@@ -118,7 +119,7 @@ class HomeAssistantChargePoint(
         self.ha_entity_unique_ids: list[str] = []
 
         # Instantiate an OCPP ChargePoint
-        ChargingStation.__init__(self, id, connection, central, skip_schema_validation)
+        ChargePoint.__init__(self, id, connection, central, skip_schema_validation)
         HomeAssistantEntityMetrics.__init__(self)
 
         # Impostiamo le metriche
@@ -204,7 +205,7 @@ class HomeAssistantChargePoint(
 
             if not self._booting:
 
-                await ChargingStation.post_connect(self)
+                await ChargePoint.post_connect(self)
 
                 self._booting = True
 
@@ -303,7 +304,7 @@ class HomeAssistantChargePoint(
         return self._status == STATE_OK
 
     async def add_ha_entities(self):
-        await self.central_system.add_ha_entities()
+        await self._central.add_ha_entities()
 
     async def call_ha_service(
             self,
@@ -462,13 +463,13 @@ class HomeAssistantChargePoint(
 
     # overridden
     def get_auth_id_tag(self, id_tag: str):
-        auth_id_tag = ChargingStation.get_auth_id_tag(self, id_tag)
+        auth_id_tag = ChargePoint.get_auth_id_tag(self, id_tag)
         auth_id_tag[CONF_NAME] = cv.string
         return auth_id_tag
 
     # overridden
     async def notify(self, msg: str, params={}):
-        await ChargingStation.notify(self, msg, params)
+        await ChargePoint.notify(self, msg, params)
         title = params.get("title", HA_NOTIFY_TITLE)
         """Notify user via HA web frontend."""
         await self._hass.services.async_call(
@@ -499,7 +500,30 @@ class HomeAssistantChargePoint(
 
     # overridden
     async def stop(self):
+        # Setto lo stato "interno" ad Unavailable
         self._status = STATE_UNAVAILABLE
+        # Setto la metrica "Availability" del Charge Point in "Inoperative"
+        self.set_availability(AvailabilityType.inoperative.value)
+        # Prendiamo tutti i connettori del Charge Point
+        for connector in self.connectors:
+            # Setto la metrica "Availability" del Connettore in "Inoperative"
+            connector.set_availability(AvailabilityType.inoperative.value)
+            # Setto la metrica "Status" del Connettore in "Unavailable" che è un sensore di Home Assistant
+            key = HAConnectorSensors.status
+            value = ChargePointStatus.unavailable.value
+            connector.set_metric_value(key, value)
+            # Avviso il Charge Advisor Backend del cambio di stato del Point Of Delivery associato al connettore
+            await asyncio.create_task(
+                self.central_system.notify_point_of_delivery_status_to_charge_advisor_backend(
+                    charging_station_id=self.id,
+                    connector_id=connector.id,
+                    status=value,
+                    ocpp_version=self.ocpp_protocol_version
+                )
+            )
+        # Aggiorno le entità di Home Assistant associate al Charge Point
+        await self.update_ha_entities()
+        # Chiamo la funzione stop() della classe padre
         await super().stop()
 
     # overridden

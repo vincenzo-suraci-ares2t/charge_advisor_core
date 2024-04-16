@@ -15,7 +15,7 @@ import asyncio
 import voluptuous as vol
 
 from ocpp.exceptions import NotImplementedError
-from ocpp.v201.enums import Action, AttributeType
+from ocpp.v201.enums import Action, ConnectorStatusType, OperationalStatusType
 from ocpp.routing import on
 
 # from .ocpp_central_system.ocpp_central_system.enums import Profiles
@@ -33,8 +33,8 @@ import homeassistant.helpers.config_validation as cv
 # Local packages
 # ----------------------------------------------------------------------------------------------------------------------
 
-from ocpp_central_system.ComponentsV201.charging_station_2_0_1 import ChargingStationV201
-from ocpp_central_system.ComponentsV201.enums_v201 import TierLevel
+from ocpp_central_system.ComponentsV201.charging_station_v201 import ChargingStationV201
+from ocpp_central_system.enums import EVSEStatus
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Local files
@@ -43,8 +43,8 @@ from ocpp_central_system.ComponentsV201.enums_v201 import TierLevel
 from .const import *
 from .enums import *
 from .logger import OcppLog
-from .metric import HomeAssistantEntityMetrics
-from .evse import HomeAssistantEVSE
+from .ha_metric import HomeAssistantEntityMetrics
+from .ha_evse import HomeAssistantEVSEV201
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Home Assistant Voluptuous SCHEMAS
@@ -84,20 +84,20 @@ TRANS_SERVICE_DATA_SCHEMA = vol.Schema(
     }
 )
 
-class HomeAssistantChargePointV201(
+class HomeAssistantChargingStationV201(
     ChargingStationV201,
     HomeAssistantEntityMetrics
 ):
     """Home Assistant representation of a Charge Point"""
 
     def __init__(
-            self,
-            id: str,
-            connection,
-            hass,
-            config_entry,
-            central,
-            skip_schema_validation: bool = False,
+        self,
+        id: str,
+        connection,
+        hass,
+        config_entry,
+        central,
+        skip_schema_validation: bool = False,
     ):
 
         OcppLog.log_i(f"Creazione di una Charging Station che utilizza il protocollo OCPP 2.0.1.")
@@ -144,15 +144,6 @@ class HomeAssistantChargePointV201(
 
     # overridden
     async def post_connect(self):
-
-        OcppLog.log_w(f"Lancio post_connect HA.")
-
-        # OcppLog.log_d("Triggering boot notification!!!")
-        # await self.trigger_boot_notification()
-
-        # await super().post_connect()
-
-        # await asyncio.sleep(10)
 
         """Logic to be executed right after a charger connects."""
 
@@ -283,6 +274,10 @@ class HomeAssistantChargePointV201(
     # HOME ASSISTANT METHODS
     # ------------------------------------------------------------------------------------------------------------------
 
+    async def add_new_entities(self):
+        await self.add_ha_entities()
+
+
     # Updates the Charge Point Home Assistant Entities and
     # its EVSE Home Assistant Entities
     async def update_ha_entities(self):
@@ -314,7 +309,9 @@ class HomeAssistantChargePointV201(
                 # source: https://github.com/home-assistant/core/blob/dev/homeassistant/helpers/entity_registry.py
                 # source: https://dev-docs.home-assistant.io/en/dev/api/helpers.html#module-homeassistant.helpers.entity_registry
                 # OcppLog.log_d(f"La entità {cp_ent.unique_id} è registrata in Home Assistant ma non è stata configurata dalla integrazione: verrà eliminata.")
-                OcppLog.log_w(f"Entità {cp_ent.unique_id} associata al Charge Point non trovata, rimozione...")
+                OcppLog.log_w(f"L'entità Home Assistant "
+                              f"{cp_ent.unique_id} associata al Charge Point "
+                              f"{self.id} non è trovata, pertanto verrà rimossa")
                 er.async_remove(
                     entity_id=cp_ent.entity_id
                 )
@@ -373,7 +370,7 @@ class HomeAssistantChargePointV201(
             case HAChargePointServices.service_availability.name:
                 resp = await self.set_availability(state, evse_id, connector_id)
             case HAChargePointServices.service_charge_start.name:
-                resp = await self.start_transaction_request(evse_id=evse_id)
+                resp = await self.start_transaction_request(evse_id=evse_id,connector_id=connector_id)
             case HAChargePointServices.service_charge_stop.name:
                 resp = await self.stop_transaction_request(transaction_id)
             case HAChargePointServices.service_reset.name:
@@ -419,7 +416,7 @@ class HomeAssistantChargePointV201(
     # overridden
     def create_evse_task(self, evse_id: int):
 
-        ha_evse = HomeAssistantEVSE(
+        ha_evse = HomeAssistantEVSEV201(
             id=str(evse_id),
             hass=self._hass,
             config_entry=self._config_entry,
@@ -498,7 +495,7 @@ class HomeAssistantChargePointV201(
 
     # overridden
     async def get_evse_instance(self, evse_id):
-        ha_evse = HomeAssistantEVSE(
+        ha_evse = HomeAssistantEVSEV201(
             hass=self._hass,
             charge_point=self,
             id=evse_id,
@@ -516,6 +513,9 @@ class HomeAssistantChargePointV201(
         )
 
         return ha_evse
+
+    def is_available(self):
+        return self._status == STATE_OK
 
     # overridden
     async def add_evse(self, evse_id):
@@ -562,6 +562,29 @@ class HomeAssistantChargePointV201(
     # overridden
     async def stop(self):
         self._status = STATE_UNAVAILABLE
+        self.set_availability_metric_value(False)
+        for evse in self.evses:
+            evse.set_availability_state(
+                ConnectorStatusType.unavailable.value
+            )
+            evse.set_metric_value(
+                EVSEStatus.availability.value,
+                OperationalStatusType.inoperative.value
+            )
+            for connector in evse.connectors:
+                connector.set_availability_state(
+                    ConnectorStatusType.unavailable.value
+                )
+                await asyncio.create_task(
+                    self.central_system.notify_point_of_delivery_status_to_charge_advisor_backend(
+                        charging_station_id=self.id,
+                        evse_id=evse.id,
+                        connector_id=connector.id,
+                        status=ConnectorStatusType.unavailable.value,
+                        ocpp_version=self.ocpp_protocol_version
+                    )
+                )
+        await self.update_ha_entities()
         await super().stop()
 
     # overridden
@@ -586,9 +609,9 @@ class HomeAssistantChargePointV201(
         await super().reconnect(connection)
 
     @on(Action.NotifyReport)
-    async def on_notify_report(self, request_id, generated_at, tbc, seq_no, report_data, **kwargs):
+    def on_notify_report(self, request_id, generated_at, tbc, seq_no, report_data, **kwargs):
         res = super().on_notify_report(request_id, generated_at, tbc, seq_no, report_data, **kwargs)
         if not tbc:
-            self._hass.async_create_task(self.add_ha_entities())
+            self._hass.async_create_task(self.add_new_entities())
             self._hass.async_create_task(self.update_ha_entities())
         return res

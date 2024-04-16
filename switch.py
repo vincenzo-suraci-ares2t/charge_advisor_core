@@ -39,9 +39,10 @@ from .logger import OcppLog
 # At a minimum define switch name and on service call,
 # metric and condition combination can be used to drive switch state, use default to set initial state to True
 @dataclass
-class OcppSwitchDescription(SwitchEntityDescription):
+class OcppSwitchDescription(
+    SwitchEntityDescription
+):
     """Class to describe a Switch entity."""
-
     on_action_service_name: str | None = None
     off_action_service_name: str | None = None
     metric_key: str | None = None
@@ -217,6 +218,7 @@ async def async_setup_entry(hass, entry, async_add_devices):
             #OcppLog.log_i(f"EVSE disponibili: {charge_point.evses}.")
             # Per ogni EVSE...
             for evse in charge_point.evses:
+
                 #OcppLog.log_w(f"EVSE in esame: {evse}.")
                 #OcppLog.log_w(f"Tipo dell'EVSE in esame: {type(evse)}.")
                 # Per ogni switch da aggiungere all'EVSE...
@@ -234,20 +236,21 @@ async def async_setup_entry(hass, entry, async_add_devices):
                             desc
                         )
                     )
-                    # Aggiungere gli switch dei connettori relativi all'EVSE in esame.
-                    for connector in evse.connectors:
-                        #OcppLog.log_w(f"Connector in esame: {connector}.")
-                        for conn_desc in EVSE_CONNECTOR_SWITCHES:
-                            #OcppLog.log_w(f"Descrizione switch per connector: {conn_desc}.")
-                            entities.append(
-                                EVSEConnectorSwitchEntity(
-                                    central_system,
-                                    charge_point,
-                                    evse,
-                                    connector,
-                                    conn_desc
-                                )
+
+                # Aggiungere gli switch dei connettori relativi all'EVSE in esame.
+                for connector in evse.connectors:
+                    #OcppLog.log_w(f"Connector in esame: {connector}.")
+                    for conn_desc in EVSE_CONNECTOR_SWITCHES:
+                        #OcppLog.log_w(f"Descrizione switch per connector: {conn_desc}.")
+                        entities.append(
+                            EVSEConnectorSwitchEntity(
+                                central_system,
+                                charge_point,
+                                evse,
+                                connector,
+                                conn_desc
                             )
+                        )
 
     #OcppLog.log_i(f"Entità switch aggiunte: {entities}.")
     # Aggiungiamo gli unique_id di ogni entità registrata in fase di setup al
@@ -578,19 +581,12 @@ class EVSEConnectorSwitchEntity(EVSESwitchEntity):
         self._attr_unique_id = ".".join([
             SWITCH_DOMAIN,
             DOMAIN,
-            self._charge_point.id,
-            self._evse.identifier,
-            str(self._connector.identifier),
+            self._connector.identifier,
             self.entity_description.key
             ])
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._connector.identifier)},
-            #via_device=(DOMAIN, self._evse.identifier),
+            identifiers={(DOMAIN, self._connector.identifier)}
         )
-        #OcppLog.log_w(f"TIPO CONNECTOR: {type(self.target)}.")
-        #OcppLog.log_w(f"Connector VIA DEVICE: ({DOMAIN}, {self._evse.identifier}).")
-        #OcppLog.log_w(f"Connector ID attr_unique_id: {self._attr_unique_id}.")
-        #OcppLog.log_w(f"Connector description key: {self.entity_description.key}.")
 
     @property
     def target(self):
