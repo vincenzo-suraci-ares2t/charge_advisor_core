@@ -353,6 +353,25 @@ class HomeAssistantChargingStationV201(
     async def post_start_transaction_event(self):
         self._hass.async_create_task(self.update_ha_entities())
 
+    def get_device_registry_identifier(self):
+        return {(DOMAIN, self.id)}
+
+    # Overridden
+    async def update_model(self, model: str | None = None ):
+        await super().update_model(model)
+        dr = device_registry.async_get(self._hass)
+        identifiers = self.get_device_registry_identifier()
+        charging_station_dev = dr.async_get_device(identifiers)
+        dr.async_update_device(charging_station_dev.id, model=model)
+
+    # Overridden
+    async def update_vendor(self, vendor: str | None = None):
+        await super().update_vendor(vendor)
+        dr = device_registry.async_get(self._hass)
+        identifiers = self.get_device_registry_identifier()
+        charging_station_dev = dr.async_get_device(identifiers)
+        dr.async_update_device(charging_station_dev.id, manufacturer=vendor)
+
     async def add_ha_entities(self):
         await self.central_system.add_ha_entities()
 

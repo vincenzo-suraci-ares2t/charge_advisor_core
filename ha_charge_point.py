@@ -304,7 +304,7 @@ class HomeAssistantChargePoint(
         return self._status == STATE_OK
 
     async def add_ha_entities(self):
-        await self._central.add_ha_entities()
+        await self.central_system.add_ha_entities()
 
     async def call_ha_service(
             self,
@@ -503,11 +503,11 @@ class HomeAssistantChargePoint(
         # Setto lo stato "interno" ad Unavailable
         self._status = STATE_UNAVAILABLE
         # Setto la metrica "Availability" del Charge Point in "Inoperative"
-        self.set_availability(AvailabilityType.inoperative.value)
+        await self.set_availability(AvailabilityType.inoperative.value)
         # Prendiamo tutti i connettori del Charge Point
         for connector in self.connectors:
             # Setto la metrica "Availability" del Connettore in "Inoperative"
-            connector.set_availability(AvailabilityType.inoperative.value)
+            await connector.set_availability(AvailabilityType.inoperative.value)
             # Setto la metrica "Status" del Connettore in "Unavailable" che è un sensore di Home Assistant
             key = HAConnectorSensors.status
             value = ChargePointStatus.unavailable.value

@@ -87,11 +87,11 @@ class HomeAssistantEVSEV201(
     """Home Assistant representation of a Charge Point"""
 
     def __init__(
-            self,
-            id: str,
-            hass,
-            config_entry,
-            charge_point
+        self,
+        id: str,
+        hass,
+        config_entry,
+        charge_point
     ):
 
         # --------------------------------------------------------------------------------------------------------------
@@ -200,15 +200,14 @@ class HomeAssistantEVSEV201(
         # Creazione del dispositivo connettore.
         await super().add_connector(connector_id)
         ha_conn = self.get_connector_by_id(connector_id)
-
         dr = device_registry.async_get(self._hass)
         dr.async_get_or_create(
             config_entry_id=self._config_entry.entry_id,
-            identifiers={(DOMAIN, str(self._charge_point.id) + '_' + ha_conn.identifier)},
-            name=str(self._charge_point.id) + '_' + ha_conn.identifier,
-            model=self._charge_point.model + " Connector",
+            identifiers={(DOMAIN, ha_conn.identifier)},
+            name=ha_conn.identifier,
+            model=self.charging_station.model + " Connector",
             via_device=(DOMAIN, self.identifier),
-            manufacturer=self._charge_point.vendor
+            manufacturer=self.charging_station.vendor
         )
 
     # overridden
