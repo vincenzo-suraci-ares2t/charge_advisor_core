@@ -209,11 +209,13 @@ class HomeAssistantChargingStationV201(
 
             if not self._booting:
 
-                # await ChargingStationV201.post_connect(self)
+                await self.async_update_ha_device_info()
 
-                #OcppLog.log_w(f"Lancio post_connect ORIGINALE.")
                 await super().post_connect()
-                #OcppLog.log_w(f"Post_connect ORIGINALE terminata correttamente.")
+
+                self._hass.async_create_task(
+                    self.update_ha_entities()
+                )
 
                 self._booting = True
 
@@ -243,34 +245,12 @@ class HomeAssistantChargingStationV201(
                     TRANS_SERVICE_DATA_SCHEMA,
                 )
 
-                """if Profiles.SMART in self.attr_supported_features:
-                    self._hass.services.async_register(
-                        DOMAIN,
-                        HAChargePointServices.service_clear_profile.value,
-                        handle_clear_profile
-                    )
-
-                if Profiles.FW in self.attr_supported_features:
-                    self._hass.services.async_register(
-                        DOMAIN,
-                        HAChargePointServices.service_update_firmware.value,
-                        handle_update_firmware,
-                        UFW_SERVICE_DATA_SCHEMA,
-                    )
-                    self._hass.services.async_register(
-                        DOMAIN,
-                        HAChargePointServices.service_get_diagnostics.value,
-                        handle_get_diagnostics,
-                        GDIAG_SERVICE_DATA_SCHEMA,
-                    )
-
-                    self.post_connect_success = True"""
                 self.post_connect_success = True
 
         except NotImplementedError as e:
-            OcppLog.log_e(f"Configuration of the charger failed: {e}")
-
-        #OcppLog.log_d(f"Post_connect HA terminata correttamente.")
+            OcppLog.log_e(
+                f"Configuration of the Charging Station {self.id} failed: {e}"
+            )
 
         self._booting = False
 
@@ -360,22 +340,6 @@ class HomeAssistantChargingStationV201(
     def get_device_registry_identifier(self):
         return {(DOMAIN, self.id)}
 
-    # Overridden
-    async def update_model(self, model: str | None = None ):
-        await super().update_model(model)
-        dr = device_registry.async_get(self._hass)
-        identifiers = self.get_device_registry_identifier()
-        charging_station_dev = dr.async_get_device(identifiers)
-        dr.async_update_device(charging_station_dev.id, model=model)
-
-    # Overridden
-    async def update_vendor(self, vendor: str | None = None):
-        await super().update_vendor(vendor)
-        dr = device_registry.async_get(self._hass)
-        identifiers = self.get_device_registry_identifier()
-        charging_station_dev = dr.async_get_device(identifiers)
-        dr.async_update_device(charging_station_dev.id, manufacturer=vendor)
-
     async def add_ha_entities(self):
         await self.central_system.add_ha_entities()
 
@@ -406,12 +370,12 @@ class HomeAssistantChargingStationV201(
                 OcppLog.log_d(f"{service_name} unknown")
         return resp
 
-    async def async_update_ha_device_info(self, boot_info: dict):
+    async def async_update_ha_device_info(self):
 
         """Update device info asynchronuously."""
         identifiers = self.get_device_registry_identifier()
 
-        serial = boot_info.get(OcppMisc.charge_point_serial_number.name, None)
+        serial = self.get_serial()
         if serial is not None:
             identifiers.add((DOMAIN, serial))
 
@@ -421,12 +385,10 @@ class HomeAssistantChargingStationV201(
             config_entry_id=self._config_entry.entry_id,
             identifiers=identifiers,
             name=self.id,
-            manufacturer=boot_info.get(OcppMisc.charge_point_vendor.name, None),
-            model=boot_info.get(OcppMisc.charge_point_model.name, None),
-            sw_version=boot_info.get(OcppMisc.charge_point_firmware_version.name, None),
+            manufacturer=self.get_vendor(),
+            model=self.get_model(),
+            sw_version=self.get_firmware_version(),
         )
-
-        OcppLog.log_d(f"Info dispositivo {self.id} aggiornate con i dati della BootNotification.")
 
     # ------------------------------------------------------------------------------------------------------------------
     # Event Loop Tasks
@@ -482,16 +444,6 @@ class HomeAssistantChargingStationV201(
         self._hass.async_create_task(
             self.notify(msg)
         )
-
-    # overridden
-    def create_boot_notification_task(self, kwargs):
-        self._hass.async_create_task(
-            self.async_update_ha_device_info(kwargs)
-        )
-        self._hass.async_create_task(
-            self.update_ha_entities()
-        )
-        super().create_boot_notification_task(kwargs)
 
     # overridden
     def create_triggered_boot_notification_task(self, msg):

@@ -141,6 +141,9 @@ class HomeAssistantChargePoint(
             super()._get_init_auth_id_tags()
         )
 
+    def get_device_registry_identifier(self):
+        return {(DOMAIN, self.id)}
+
     # overridden
     async def post_connect(self):
 
@@ -209,15 +212,21 @@ class HomeAssistantChargePoint(
 
             if not self._booting:
 
-                await ChargePoint.post_connect(self)
+                await self.async_update_ha_device_info()
+
+                await super().post_connect()
+
+                self._hass.async_create_task(
+                    self.update_ha_entities()
+                )
 
                 self._booting = True
 
                 self.post_connect_success = False
 
-                # ----------------------------------------------------------------------------------------------------------
+                # ------------------------------------------------------------------------------------------------------
                 # REGISTRAZIONE DEI SERVIZI SU HOME ASSISTANT
-                # ----------------------------------------------------------------------------------------------------------
+                # ------------------------------------------------------------------------------------------------------
 
                 """ Register custom services with home assistant """
                 self._hass.services.async_register(
@@ -262,7 +271,9 @@ class HomeAssistantChargePoint(
                     self.post_connect_success = True
 
         except NotImplementedError as e:
-            OcppLog.log_e(f"Configuration of the charger failed: {e}")
+            OcppLog.log_e(
+                f"Configuration of the Charge Point {self.id} failed: {e}"
+            )
 
         self._booting = False
 
@@ -289,7 +300,7 @@ class HomeAssistantChargePoint(
         # Update sensors values in HA
         er = entity_registry.async_get(self._hass)
         dr = device_registry.async_get(self._hass)
-        identifiers = {(DOMAIN, self.id)}
+        identifiers = self.get_device_registry_identifier()
         cp_dev = dr.async_get_device(identifiers)
         for cp_ent in entity_registry.async_entries_for_device(er, cp_dev.id):
             if cp_ent.unique_id not in self.ha_entity_unique_ids:
@@ -336,12 +347,12 @@ class HomeAssistantChargePoint(
                 OcppLog.log_w(f"Home Assistant Charge Point Service {service_name} unknown")
         return resp
 
-    async def async_update_ha_device_info(self, boot_info: dict):
+    async def async_update_ha_device_info(self):
 
         """Update device info asynchronuously."""
-        identifiers = {(DOMAIN, self.id)}
+        identifiers = self.get_device_registry_identifier()
 
-        serial = boot_info.get(OcppMisc.charge_point_serial_number.name, None)
+        serial = self.get_serial()
         if serial is not None:
             identifiers.add((DOMAIN, serial))
 
@@ -351,12 +362,10 @@ class HomeAssistantChargePoint(
             config_entry_id=self._config_entry.entry_id,
             identifiers=identifiers,
             name=self.id,
-            manufacturer=boot_info.get(OcppMisc.charge_point_vendor.name, None),
-            model=boot_info.get(OcppMisc.charge_point_model.name, None),
-            sw_version=boot_info.get(OcppMisc.charge_point_firmware_version.name, None),
+            manufacturer=self.get_vendor(),
+            model=self.get_model(),
+            sw_version=self.get_firmware_version(),
         )
-
-        # OcppLog.log_d(f"{self.id} device info updated with the BootNotification data")
 
     # ------------------------------------------------------------------------------------------------------------------
     # Event Loop Tasks
@@ -393,25 +402,6 @@ class HomeAssistantChargePoint(
     def create_security_event_task(self, msg):
         self._hass.async_create_task(
             self.notify(msg)
-        )
-
-    # overridden
-    def create_boot_notification_task(self, kwargs):
-        self._hass.async_create_task(
-            self.async_update_ha_device_info(kwargs)
-        )
-        self._hass.async_create_task(
-            self.update_ha_entities()
-        )
-        super().create_boot_notification_task(kwargs)
-
-    # overridden
-    def create_triggered_boot_notification_task(self, msg):
-        self._hass.async_create_task(
-            self.notify(msg)
-        )
-        self._hass.async_create_task(
-            self.post_connect()
         )
 
     # overridden
