@@ -155,8 +155,12 @@ class HomeAssistantCentralSystem(
     def hass(self):
         return self._hass
 
+    @property
+    def status(self):
+        return self._status
+
     def is_available(self):
-        return self._status == STATE_OK
+        return self.status == STATE_OK
 
     @staticmethod
     async def get_instance(params = {}):

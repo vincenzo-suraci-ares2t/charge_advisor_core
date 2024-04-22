@@ -134,6 +134,10 @@ class HomeAssistantChargingStationV201(
         self.set_metric_value(HAChargePointSensors.identifier.value,f"EVSE: {id}")
         self.set_metric_value(HAChargePointSensors.reconnects.value, 0)
 
+    @property
+    def status(self):
+        return self._status
+
     # overridden
     def _get_init_auth_id_tags(self):
         config = self._hass.data[DOMAIN].get(CONFIG, {})
@@ -300,25 +304,25 @@ class HomeAssistantChargingStationV201(
         dr = device_registry.async_get(self._hass)
         # OcppLog.log_d(f"REGISTRO DISPOSITIVI: {dr.devices}.")
         # OcppLog.log_d(f"Registro entità: {er.entities}.")
-        identifiers = {(DOMAIN, self.id)}
-        cp_dev = dr.async_get_device(identifiers)
+        identifiers = self.get_device_registry_identifier()
+        charging_station_dev = dr.async_get_device(identifiers)
         #OcppLog.log_w(f"Aggiornamento dei Charge Point...")
         #OcppLog.log_w(f"Entità registrate nel Charge Point: {self.ha_entity_unique_ids}.")
-        for cp_ent in entity_registry.async_entries_for_device(er, cp_dev.id):
-            if cp_ent.unique_id not in self.ha_entity_unique_ids:
+        for charging_station_ent in entity_registry.async_entries_for_device(er, charging_station_dev.id):
+            if charging_station_ent.unique_id not in self.ha_entity_unique_ids:
                 # source: https://github.com/home-assistant/core/blob/dev/homeassistant/helpers/entity_registry.py
                 # source: https://dev-docs.home-assistant.io/en/dev/api/helpers.html#module-homeassistant.helpers.entity_registry
                 # OcppLog.log_d(f"La entità {cp_ent.unique_id} è registrata in Home Assistant ma non è stata configurata dalla integrazione: verrà eliminata.")
                 OcppLog.log_w(f"L'entità Home Assistant "
-                              f"{cp_ent.unique_id} associata al Charge Point "
+                              f"{charging_station_ent.unique_id} associata al Charge Point "
                               f"{self.id} non è trovata, pertanto verrà rimossa")
                 er.async_remove(
-                    entity_id=cp_ent.entity_id
+                    entity_id=charging_station_ent.entity_id
                 )
             else:
                 await entity_component.async_update_entity(
                     hass=self._hass,
-                    entity_id=cp_ent.entity_id
+                    entity_id=charging_station_ent.entity_id
                 )
         #OcppLog.log_w(f"Charge Point aggiornati.")
         #OcppLog.log_w(f"Aggiornamento degli EVSE...")
@@ -327,17 +331,17 @@ class HomeAssistantChargingStationV201(
             #OcppLog.log_w(f"HA-EVSE in esame: {evse}.")
             #OcppLog.log_w(f"Entità registrate nell'EVSE in esame: {evse.ha_entity_unique_ids}.")
             identifiers = {(DOMAIN, evse.identifier)}
-            ev_dev = dr.async_get_device(identifiers)
+            evse_dev = dr.async_get_device(identifiers)
             # OcppLog.log_w(f"Device EVSE associato: {ev_dev}.")
-            for ev_ent in entity_registry.async_entries_for_device(er, ev_dev.id):
-                if ev_ent.unique_id not in evse.ha_entity_unique_ids:
+            for evse_ent in entity_registry.async_entries_for_device(er, evse_dev.id):
+                if evse_ent.unique_id not in evse.ha_entity_unique_ids:
                     er.async_remove(
-                        entity_id=ev_ent.entity_id
+                        entity_id=evse_ent.entity_id
                     )
                 else:
                     await entity_component.async_update_entity(
                         hass=self._hass,
-                        entity_id=ev_ent.entity_id
+                        entity_id=evse_ent.entity_id
                     )
             #OcppLog.log_w(f"Aggiornamento connettori associati all'EVSE {evse.id}.")
             for conn in evse.connectors:
@@ -405,7 +409,7 @@ class HomeAssistantChargingStationV201(
     async def async_update_ha_device_info(self, boot_info: dict):
 
         """Update device info asynchronuously."""
-        identifiers = {(DOMAIN, self.id)}
+        identifiers = self.get_device_registry_identifier()
 
         serial = boot_info.get(OcppMisc.charge_point_serial_number.name, None)
         if serial is not None:
@@ -533,8 +537,9 @@ class HomeAssistantChargingStationV201(
 
         return ha_evse
 
+    #overidden
     def is_available(self):
-        return self._status == STATE_OK
+        return super().is_available() and self.status == STATE_OK
 
     # overridden
     async def add_evse(self, evse_id):

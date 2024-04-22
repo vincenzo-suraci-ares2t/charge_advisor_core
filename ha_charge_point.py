@@ -129,6 +129,10 @@ class HomeAssistantChargePoint(
         # Lista di connettori
         self._connectors: list[HomeAssistantConnector] = []
 
+    @property
+    def status(self):
+        return self._status
+
     # overridden
     def _get_init_auth_id_tags(self):
         config = self._hass.data[DOMAIN].get(CONFIG, {})
@@ -301,7 +305,7 @@ class HomeAssistantChargePoint(
         self._updating_entities = False
 
     def is_available(self):
-        return self._status == STATE_OK
+        return self.status == STATE_OK
 
     async def add_ha_entities(self):
         await self.central_system.add_ha_entities()

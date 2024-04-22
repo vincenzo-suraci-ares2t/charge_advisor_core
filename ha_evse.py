@@ -172,11 +172,6 @@ class HomeAssistantEVSEV201(
             #OcppLog.log_w(f"Tipo di connettore associato all'EVSE: {type(conn)}.")
             await conn.update_ha_entities()
 
-
-    #def is_available(self):
-    #    return self._status == STATE_OK
-
-
     # ------------------------------------------------------------------------------------------------------------------
     # Event Loop Tasks
     # ------------------------------------------------------------------------------------------------------------------
@@ -249,8 +244,9 @@ class HomeAssistantEVSEV201(
     def is_available_for_charging(self):
         return super().is_available_for_charging() and self.is_available()
 
+    # overridden
     def is_available(self):
-        return self.charge_point.is_available
+        return super().is_available() and self.charge_point.is_available()
 
     ####################################################################################################################
     # Metodo per gestire le istruzioni ricevute dall'interfaccia grafica.
