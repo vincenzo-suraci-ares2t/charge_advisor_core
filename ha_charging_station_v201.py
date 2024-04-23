@@ -489,7 +489,7 @@ class HomeAssistantChargingStationV201(
 
         return ha_evse
 
-    #overidden
+    #overridden
     def is_available(self):
         return ChargingStationV201.is_available(self) and self.status == STATE_OK
 
