@@ -105,7 +105,7 @@ class OcppSensor:
     @staticmethod
     def get_charge_point_entities(
         hass,
-        charge_point: ChargePoint
+        charge_point
     ):
 
         # Recupero della Central System
