@@ -316,7 +316,7 @@ class HomeAssistantChargePoint(
         self._updating_entities = False
 
     def is_available(self):
-        return ChargePoint.is_operative(self) and self.status == STATE_OK
+        return super().is_operative() and self.status == STATE_OK
 
     async def add_ha_entities(self):
         await self.central_system.add_ha_entities()
