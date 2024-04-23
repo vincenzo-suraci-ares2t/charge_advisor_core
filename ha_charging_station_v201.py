@@ -491,8 +491,9 @@ class HomeAssistantChargingStationV201(
 
     #overridden
     def is_available(self):
-        is_ocpp_charging_station_available = super().is_available()
-        is_ha_charging_station_available = self.status == STATE_OK
+        is_ocpp_charging_station_available = True
+        # is_ocpp_charging_station_available = super().is_available()
+        is_ha_charging_station_available = ( self.status == STATE_OK )
         return is_ocpp_charging_station_available and is_ha_charging_station_available
 
     # overridden
