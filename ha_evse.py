@@ -23,6 +23,7 @@ from ocpp.exceptions import NotImplementedError
 from homeassistant.components.persistent_notification import DOMAIN as PN_DOMAIN
 from homeassistant.const import STATE_OK, STATE_UNAVAILABLE, UnitOfTime
 from homeassistant.helpers import device_registry, entity_component, entity_registry
+from homeassistant.helpers.typing import UNDEFINED
 import homeassistant.helpers.config_validation as cv
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -196,11 +197,14 @@ class HomeAssistantEVSEV201(
         await super().add_connector(connector_id)
         ha_conn = self.get_connector_by_id(connector_id)
         dr = device_registry.async_get(self._hass)
+        model = UNDEFINED
+        if self.charging_station.model is not None:
+            model = self.charging_station.model + " Connector"
         dr.async_get_or_create(
             config_entry_id=self._config_entry.entry_id,
             identifiers={(DOMAIN, ha_conn.identifier)},
             name=ha_conn.identifier,
-            model=self.charging_station.model + " Connector",
+            model=model,
             via_device=(DOMAIN, self.identifier),
             manufacturer=self.charging_station.vendor
         )

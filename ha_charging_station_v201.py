@@ -27,6 +27,7 @@ from ocpp.routing import on
 from homeassistant.components.persistent_notification import DOMAIN as PN_DOMAIN
 from homeassistant.const import STATE_OK, STATE_UNAVAILABLE
 from homeassistant.helpers import device_registry, entity_component, entity_registry
+from homeassistant.helpers.typing import UNDEFINED
 import homeassistant.helpers.config_validation as cv
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -477,12 +478,16 @@ class HomeAssistantChargingStationV201(
             config_entry=self._config_entry,
         )
 
+        model = UNDEFINED
+        if self.model is not None:
+            model = self.model + " EVSE"
+
         dr = device_registry.async_get(self._hass)
         dr.async_get_or_create(
             config_entry_id=self._config_entry.entry_id,
             identifiers={(DOMAIN, ha_evse.identifier)},
             name=ha_evse.identifier,
-            model=self.model + " EVSE",
+            model=model,
             via_device=(DOMAIN, self.id),
             manufacturer=self.vendor
         )
