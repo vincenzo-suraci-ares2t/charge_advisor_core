@@ -260,10 +260,6 @@ class HomeAssistantEVSEV201(
             state: bool = True,
             connector_id: int = None
     ):
-        """match service_name:
-            case HAChargePointServices.service_availability.name:
-                if connector_id is not None:
-                    return await self.set_availability(state=state, connector_id=connector_id)"""
         return await self._charge_point.call_ha_service(
             service_name=service_name,
             state=state,

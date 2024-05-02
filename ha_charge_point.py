@@ -332,7 +332,7 @@ class HomeAssistantChargePoint(
         resp = False
         match service_name:
             case HAChargePointServices.service_availability.name:
-                resp = await self.set_availability(state, connector_id)
+                resp = await self.change_availability(state, connector_id)
             case HAChargePointServices.service_charge_start.name:
                 resp = await self.remote_start_transaction(connector_id)
             case HAChargePointServices.service_charge_stop.name:
@@ -494,19 +494,19 @@ class HomeAssistantChargePoint(
 
     # overridden
     async def stop(self):
-        # Setto lo stato "interno" ad Unavailable
+        # Set the inner (Home Assistant) status to "Unavailable"
         self._status = STATE_UNAVAILABLE
-        # Setto la metrica "Availability" del Charge Point in "Inoperative"
+        # Set the Charge Point "Availability" metric to "Inoperative"
         await self.set_availability(AvailabilityType.inoperative.value)
-        # Prendiamo tutti i connettori del Charge Point
+        # Loop over all the Charge Point Connectors
         for connector in self.connectors:
-            # Setto la metrica "Availability" del Connettore in "Inoperative"
+            # Set the Connector "Availability" metric to "Inoperative"
             await connector.set_availability(AvailabilityType.inoperative.value)
-            # Setto la metrica "Status" del Connettore in "Unavailable" che è un sensore di Home Assistant
+            # Set the Connector "Status" metric to "Unavailable": it is a Home Assistant Sensor
             key = HAConnectorSensors.status
             value = ChargePointStatus.unavailable.value
             connector.set_metric_value(key, value)
-            # Avviso il Charge Advisor Backend del cambio di stato del Point Of Delivery associato al connettore
+            # Notify Charge Advisor Backend of Point Of Delivery (associated to the Connector) status change
             await asyncio.create_task(
                 self.central_system.notify_point_of_delivery_status_to_charge_advisor_backend(
                     charging_station_id=self.id,
@@ -515,9 +515,9 @@ class HomeAssistantChargePoint(
                     ocpp_version=self.ocpp_protocol_version
                 )
             )
-        # Aggiorno le entità di Home Assistant associate al Charge Point
+        # Update all the Home Assistant entities associated to the Charge Point
         await self.update_ha_entities()
-        # Chiamo la funzione stop() della classe padre
+        # Call the spuer-class stop() function
         await super().stop()
 
     # overridden

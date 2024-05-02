@@ -356,7 +356,7 @@ class HomeAssistantChargingStationV201(
         resp = False
         match service_name:
             case HAChargePointServices.service_availability.name:
-                resp = await self.set_availability(state, evse_id, connector_id)
+                resp = await self.change_availability(state, evse_id, connector_id)
             case HAChargePointServices.service_charge_start.name:
                 resp = await self.start_transaction_request(evse_id=evse_id,connector_id=connector_id)
             case HAChargePointServices.service_charge_stop.name:
@@ -545,20 +545,28 @@ class HomeAssistantChargingStationV201(
 
     # overridden
     async def stop(self):
+        # Set the inner (Home Assistant) status to "Unavailable"
         self._status = STATE_UNAVAILABLE
+        # Set the Charge Point "Availability" metric to False
         self.set_availability_metric_value(False)
+        # Loop over all the Charging Station EVSEs
         for evse in self.evses:
+            # Set the EVSE "AvailabilityState" metric to "Unavailable"
             evse.set_availability_state(
                 ConnectorStatusType.unavailable.value
             )
+            # Set the EVSE "Availability" metric to "Inoperative"
             evse.set_metric_value(
                 EVSEStatus.availability.value,
                 OperationalStatusType.inoperative.value
             )
+            # Loop over all the EVSE Connectors
             for connector in evse.connectors:
+                # Set the Connector "AvailabilityState" metric to "Unavailable"
                 connector.set_availability_state(
                     ConnectorStatusType.unavailable.value
                 )
+                # Notify Charge Advisor Backend of Point Of Delivery (associated to the Connector) status change
                 await asyncio.create_task(
                     self.central_system.notify_point_of_delivery_status_to_charge_advisor_backend(
                         charging_station_id=self.id,
@@ -568,7 +576,9 @@ class HomeAssistantChargingStationV201(
                         ocpp_version=self.ocpp_protocol_version
                     )
                 )
+        # Update all the Home Assistant entities associated to the Charging Station
         await self.update_ha_entities()
+        # Call the spuer-class stop() function
         await super().stop()
 
     # overridden
