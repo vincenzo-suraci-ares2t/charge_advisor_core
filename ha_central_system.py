@@ -172,14 +172,39 @@ class HomeAssistantCentralSystem(
         self,
         charge_point,
         connector_id,
-        id_tag: str | None = None
+        evse_id=None,
+        id_tag: str | None = None,
+        parent_id_tag=None,
+        reservation_id=None,
+        expiry_date=None,
+        energy_setpoint=None,
+        time_setpoint=None
     ):
-        return self._hass.async_create_task(
-            charge_point.remote_start_transaction(
-                connector_id,
-                id_tag
+        if evse_id is None:
+            # ----------------------------------------------------------------------------------------------------------
+            # Create a task to remotely start a transaction using OCPP 1.6.
+            # ----------------------------------------------------------------------------------------------------------
+            task = charge_point.remote_start_transaction(
+                connector_id=connector_id,
+                id_tag=id_tag
             )
-        )
+        else:
+            # ----------------------------------------------------------------------------------------------------------
+            # Create a task to remotely start a transaction using OCPP 2.0.1.
+            # ----------------------------------------------------------------------------------------------------------
+            evse = charge_point.get_evse_by_id(evse_id)
+            task = evse.remote_start_transaction(
+                id_tag=id_tag,
+                parent_id_tag=parent_id_tag,
+                reservation_id=reservation_id,
+                expiry_date=expiry_date,
+                setpoint_energia=energy_setpoint,
+                setpoint_tempo=time_setpoint
+            )
+        # ----------------------------------------------------------------------------------------------------------
+        # Perform the created task.
+        # ----------------------------------------------------------------------------------------------------------
+        return self._hass.async_create_task(task)
 
     def async_create_remote_stop_transaction_task(
         self,
