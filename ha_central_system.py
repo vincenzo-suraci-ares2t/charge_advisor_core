@@ -360,7 +360,7 @@ class HomeAssistantCentralSystem(
         else:
             OcppLog.log_w("Il Thread for Websocket communication is already in execution")
             OcppLog.log_w("Stopping old one ...")
-            self._charge_advisor_handler.stop_websocket_client()
+            await self._charge_advisor_handler.stop_websocket_client()
             self._charge_advisor_thread_websocket = None
 
             return True
@@ -372,7 +372,7 @@ class HomeAssistantCentralSystem(
     async def stop_charge_advisor_backend_communication(self):
 
         self.charge_advisor_handler.stop_api_client()
-        self.charge_advisor_handler.stop_websocket_client()
+        await self.charge_advisor_handler.stop_websocket_client()
 
         self.stop_charge_advisor_threads()
 
