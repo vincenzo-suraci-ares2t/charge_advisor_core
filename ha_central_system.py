@@ -177,19 +177,16 @@ class HomeAssistantCentralSystem(
         parent_id_tag=None,
         reservation_id=None,
         expiry_date=None,
-        energy_setpoint=None,
-        time_setpoint=None
+        session_params = None
     ):
-        OcppLog.log_i(f"SETPOINTS: T - {time_setpoint} | E - {energy_setpoint}")
         if evse_id is None:
             # ----------------------------------------------------------------------------------------------------------
             # Create a task to remotely start a transaction using OCPP 1.6.
             # ----------------------------------------------------------------------------------------------------------
             task = charge_point.remote_start_transaction(
-                    connector_id=connector_id,
-                    id_tag=id_tag,
-                    time_setpoint=time_setpoint,
-                    energy_setpoint=energy_setpoint
+                connector_id=connector_id,
+                id_tag=id_tag,
+                session_params=session_params
             )
         else:
             # ----------------------------------------------------------------------------------------------------------
@@ -201,8 +198,7 @@ class HomeAssistantCentralSystem(
                 parent_id_tag=parent_id_tag,
                 reservation_id=reservation_id,
                 expiry_date=expiry_date,
-                setpoint_energia=energy_setpoint,
-                setpoint_tempo=time_setpoint
+                session_params=session_params
             )
         # ----------------------------------------------------------------------------------------------------------
         # Perform the created task.
