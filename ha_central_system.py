@@ -250,9 +250,9 @@ class HomeAssistantCentralSystem(
                 msg += "updating"
             msg += f" its own Home Assistant entities > Waiting {HA_UPDATE_ENTITIES_WAITING_SECS} sec"
             OcppLog.log_w(msg)
-            await asyncio.sleep(HA_UPDATE_ENTITIES_WAITING_SECS)    
-    
-            
+            await asyncio.sleep(HA_UPDATE_ENTITIES_WAITING_SECS)
+
+
 
         self._adding_entities = True
 
@@ -264,9 +264,13 @@ class HomeAssistantCentralSystem(
                 self._config_entry, platform
             )
 
-            await self._hass.config_entries.async_forward_entry_setup(
-                self._config_entry, platform
-            )
+            # await self._hass.config_entries.async_forward_entry_setup(
+            #     self._config_entry, platform
+            # )
+
+        await self._hass.config_entries.async_forward_entry_setups(
+            self._config_entry, PLATFORMS
+        )
 
         self._adding_entities = False
 
