@@ -593,3 +593,19 @@ class HomeAssistantChargingStationV201(
             self._hass.async_create_task(self.add_new_entities())
             self._hass.async_create_task(self.update_ha_entities())
         return res
+
+    # overridden
+    async def read_meter_values(
+            self,
+            meter_values,
+            evse = None,
+            transaction_info = None,
+    ):
+        # --------------------------------------------------------------------------------------------------------------
+        # Firstly, execute the instructions in the overridden method.
+        # --------------------------------------------------------------------------------------------------------------
+        super().read_meter_values(meter_values, evse, transaction_info)
+        # --------------------------------------------------------------------------------------------------------------
+        # Then, update all the Home Assistant entities.
+        # --------------------------------------------------------------------------------------------------------------
+        await self._hass.async_create_task(self.update_ha_entities())
