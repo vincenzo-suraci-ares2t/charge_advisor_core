@@ -604,7 +604,7 @@ class HomeAssistantChargingStationV201(
         # --------------------------------------------------------------------------------------------------------------
         # Firstly, execute the instructions in the overridden method.
         # --------------------------------------------------------------------------------------------------------------
-        super().read_meter_values(meter_values, evse, transaction_info)
+        await super().read_meter_values(meter_values, evse, transaction_info)
         # --------------------------------------------------------------------------------------------------------------
         # Then, update all the Home Assistant entities.
         # --------------------------------------------------------------------------------------------------------------
