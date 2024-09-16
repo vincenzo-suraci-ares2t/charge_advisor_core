@@ -354,7 +354,6 @@ class HomeAssistantCentralSystem(
             OcppLog.log_w("Stopping old one ...")
             return True
 
-
         if self._charge_advisor_thread_websocket is None:
             self._charge_advisor_thread_websocket = Thread(
                 target=self._start_charge_advisor_handler_websocket
