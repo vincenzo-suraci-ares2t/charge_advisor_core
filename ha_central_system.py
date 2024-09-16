@@ -163,7 +163,7 @@ class HomeAssistantCentralSystem(
         return self.status == STATE_OK
 
     @staticmethod
-    async def get_instance(params = {}):
+    async def get_instance(params={}):
         hass = params.get("hass")
         entry = params.get("entry")
         return HomeAssistantCentralSystem(hass, entry)
