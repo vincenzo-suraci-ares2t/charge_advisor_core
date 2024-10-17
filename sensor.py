@@ -556,8 +556,9 @@ class ChargePointMetric(RestoreSensor, SensorEntity):
         value = self.target.get_metric_value(self._metric_key)
         if isinstance(value, float):
             value = round(value, self.entity_description.scale)
-        if value is not None:
+        if value is not None or self.native_unit_of_measurement is not None:
             self._attr_native_value = value
+
         # OcppLog.log_d(f"{self._attr_unique_id} value: {self._attr_native_value}")
         return self._attr_native_value
 
