@@ -184,7 +184,8 @@ class ChargePointOcppNumber(RestoreNumber, NumberEntity):
             if self.target.is_available() and self._charge_point.get_metric("SmartChargingCtrlr.Available"):
 
                 resp = await self.target.set_max_charge_rate(
-                    limit_amps=num_value * 3
+                    limit_amps=num_value * 3,
+                    limit_watts=150000
                 )
 
                 if resp is True:
