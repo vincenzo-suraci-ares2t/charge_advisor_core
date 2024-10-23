@@ -34,7 +34,7 @@ import homeassistant.const as ha
 # ----------------------------------------------------------------------------------------------------------------------
 
 from ocpp.v16.enums import ChargePointStatus
-from ocpp.v201.enums import ConnectorStatusType
+from ocpp.v201.enums import ConnectorStatusType, ChargingStateType
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -64,6 +64,14 @@ CONNECTOR_CHARGING_SESSION_SENSORS_AVAILABILTY_SET: Final = [
 
 V201_CONNECTOR_CHARGING_SESSION_SENSORS_AVAILABILTY_SET: Final = [
     ConnectorStatusType.occupied.value
+]
+
+V201_CONNECTOR_CHARGING_SESSION_SENSORS_CHARGING_STATE_SET: Final = [
+    ChargingStateType.charging.value,
+    ChargingStateType.ev_connected.value,
+    ChargingStateType.suspended_ev.value,
+    ChargingStateType.suspended_evse.value,
+    ChargingStateType.idle.value,
 ]
 
 
@@ -371,8 +379,6 @@ class OcppSensor:
 # Static Sensor Platform entities registration done at CONFIG TIME (not at RUNTIME)
 # A workaround to do it at runtime: https://community.home-assistant.io/t/adding-entities-at-runtime/200855/2
 async def async_setup_entry(hass, entry, async_add_devices):
-
-    #OcppLog.log_i("Sensor async_setup_entry called!")
 
     # Configure the sensor platform
     central_system: CentralSystem = hass.data[DOMAIN][entry.entry_id]

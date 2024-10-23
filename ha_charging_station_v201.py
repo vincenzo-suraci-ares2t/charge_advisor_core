@@ -312,6 +312,7 @@ class HomeAssistantChargingStationV201(
                         entity_id=evse_ent.entity_id
                     )
                 else:
+                    # OcppLog.log_d(f"Updating entity {evse_ent.entity_id}...")
                     await entity_component.async_update_entity(
                         hass=self._hass,
                         entity_id=evse_ent.entity_id
@@ -353,7 +354,7 @@ class HomeAssistantChargingStationV201(
             case HAChargePointServices.service_unlock.name:
                 resp = await self.unlock(evse_id)
             case HAChargePointServices.service_set_charge_rate:
-                resp = await self.set_charge_rate(evse_id = evse_id, limit_amps=0)
+                resp = await self.set_charge_rate(evse_id=evse_id, limit_amps=0)
             case _:
                 OcppLog.log_w(f"{service_name} unknown")
         return resp
