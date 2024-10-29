@@ -44,6 +44,8 @@ from .ocpp_central_system.ocpp_central_system.logger import OcppLog
 from .const import *
 from .enums import Profiles, SubProtocol
 
+from ocpp.v201.enums import AttributeType
+
 @dataclass
 class OcppNumberDescription(NumberEntityDescription):
     """Class to describe a Number entity."""
@@ -158,13 +160,13 @@ class ChargePointOcppNumber(RestoreNumber, NumberEntity):
     entity_description: OcppNumberDescription
 
     def __init__(
-        self,
-        hass: HomeAssistant,
-        central_system: CentralSystem,
-        charge_point: ChargePoint,
-        description: OcppNumberDescription,
+            self,
+            hass: HomeAssistant,
+            central_system: CentralSystem,
+            charge_point: ChargePoint,
+            description: OcppNumberDescription,
     ):
-        """Initialize a Number instance."""        
+        """Initialize a Number instance."""
         self._hass = hass
         self._central_system = central_system
         self._charge_point = charge_point
@@ -249,20 +251,41 @@ class ChargePointOcppNumber(RestoreNumber, NumberEntity):
         elif self._charge_point.connection_ocpp_version == SubProtocol.OcppV201.value:
             if self.target.is_available() and self._charge_point.get_metric("SmartChargingCtrlr.Available"):
                 # ------------------------------------------------------------------------------------------------------
-                # Set the maximum current to the new value multiplied by the number of phases.
-                #
-                # TODO: the number of phases is currently (21/10/24) hard-coded to 1, it has to be made dynamic
-                #  depending on the number of phases actually supported by the EVSE.
+                # Check whether the attribute to be changed is current or power...
                 # ------------------------------------------------------------------------------------------------------
                 if self._attr_name == "Maximum Current":
-                    resp = await self.target.set_max_charge_rate(
-                        limit_amps=num_value * 1
+                    # --------------------------------------------------------------------------------------------------
+                    # Retrieve the number of phases used by the EVSE.
+                    # --------------------------------------------------------------------------------------------------
+                    phases_variable = await self.target.charging_station.get_single_variable_generic(
+                        component_name=self.target.get_component("EVSE").name,
+                        evse_id=self.target.id,
+                        variable_name="SupplyPhases",
+                        attribute_type=AttributeType.actual.value
                     )
-                # ------------------------------------------------------------------------------------------------------
-                # Set the maximum power to the new value. Since the slider expresses the value in kilowatts, its value
-                # has to be converted to watts first.
-                # ------------------------------------------------------------------------------------------------------
+                    phases = int(phases_variable[0])
+                    # --------------------------------------------------------------------------------------------------
+                    # Using the number of phases, check whether the Charging Station operates in AC or DC.
+                    #
+                    # According to the OCPP 2.0.1 specifications, section "Referenced Components and Variables",
+                    # paragraph 2.13.6, if the number of phases is 0 the charging station uses DC.
+                    # --------------------------------------------------------------------------------------------------
+                    if phases == 0:
+                        # ----------------------------------------------------------------------------------------------
+                        # Set the number of phases to 1 to avoid multiplying by 0.
+                        # ----------------------------------------------------------------------------------------------
+                        phases = 1
+                    # --------------------------------------------------------------------------------------------------
+                    # Set the maximum current to the new value multiplied by the number of phases.
+                    # --------------------------------------------------------------------------------------------------
+                    resp = await self.target.set_max_charge_rate(
+                        limit_amps=num_value * phases
+                    )
                 elif self._attr_name == "Maximum Power":
+                    # --------------------------------------------------------------------------------------------------
+                    # Set the maximum power to the new value. Since the slider expresses the value in kilowatts, its
+                    # value has to be converted to watts first.
+                    # --------------------------------------------------------------------------------------------------
                     resp = await self.target.set_max_charge_rate(
                         limit_watts=num_value * 1000
                     )
