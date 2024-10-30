@@ -111,9 +111,10 @@ else:
 # ----------------------------------------------------------------------------------------------------------------------
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import Config, HomeAssistant
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 # ----------------------------------------------------------------------------------------------------------------------
 # External packages
@@ -171,7 +172,7 @@ CONFIG_SCHEMA = vol.Schema(
 # Home Assistant Functions
 # ----------------------------------------------------------------------------------------------------------------------
 
-async def async_setup(hass: HomeAssistant, config: Config):
+async def async_setup(hass: HomeAssistant, config: ConfigType):
 
     """Read configuration from yaml."""
 
