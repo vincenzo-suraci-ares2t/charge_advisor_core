@@ -271,8 +271,7 @@ class OcppSensor:
                         #OcppLog.log_d(f"Adding Connector ID {connector_id} on EVSE {evse_id}")
 
                 for metric_key in tier_level.measurands_list:
-                    sensors.append(
-                        OcppSensorDescription(
+                    desc = OcppSensorDescription(
                             key=metric_key.lower(),
                             name=metric_key.replace(".", " "),
                             metric_key=metric_key,
@@ -281,12 +280,14 @@ class OcppSensor:
                             native_uom=OcppSensor.get_native_uom_by_metric_key(metric_key),
                             native_value=OcppSensor.get_native_value_by_metric_key(metric_key)
                         )
+                    sensors.append(
+                        desc
                     )
 
             create_sensors_from_include_components(charge_point, sensors)
             create_sensors_from_tier_level(charge_point, sensors)
 
-            evse_sensors = set(list(V201HAConnectorChargingSessionSensors)) | set(list(HAConnectorChargingSessionSensors))
+            evse_sensors = set(list(V201HAConnectorChargingSessionSensors))
             for evse in charge_point.evses:
                 create_sensors_from_include_components(evse, sensors)
                 create_sensors_from_tier_level(evse, sensors)
@@ -387,7 +388,8 @@ async def async_setup_entry(hass, entry, async_add_devices):
 
     for cp_id in central_system.charge_points:
         charge_point = central_system.charge_points[cp_id]
-        for charge_point_entity in OcppSensor.get_charge_point_entities(hass, charge_point):
+        charge_point_entities = OcppSensor.get_charge_point_entities(hass, charge_point)
+        for charge_point_entity in charge_point_entities:
             entities.append(charge_point_entity)
 
     # Aggiungiamo gli unique_id di ogni entità registrata in fase di setup al
