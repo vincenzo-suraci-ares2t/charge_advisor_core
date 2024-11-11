@@ -287,7 +287,7 @@ class OcppSensor:
             create_sensors_from_include_components(charge_point, sensors)
             create_sensors_from_tier_level(charge_point, sensors)
 
-            evse_sensors = set(list(V201HAConnectorChargingSessionSensors))
+            evse_sensors = set(list(V201HAConnectorChargingSessionSensors)) | set(list(HAConnectorChargingSessionSensors))
             for evse in charge_point.evses:
                 create_sensors_from_include_components(evse, sensors)
                 create_sensors_from_tier_level(evse, sensors)
