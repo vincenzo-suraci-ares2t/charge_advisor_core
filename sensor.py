@@ -393,7 +393,9 @@ async def async_setup_entry(hass, entry, async_add_devices):
             entities.append(charge_point_entity)
 
     # Aggiungiamo gli unique_id di ogni entità registrata in fase di setup al
-    # Charge Point o al Connector
+    # - Charge Point / Charging Station
+    # - EVSE
+    # - Connector
     for entity in entities:
         entity.append_entity_unique_id()
 
@@ -427,6 +429,7 @@ class ChargePointMetric(RestoreSensor, SensorEntity):
             self._charge_point.id,
             self.entity_description.key
         ])
+
         self._attr_name = self.entity_description.name
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._charge_point.id)},
@@ -503,6 +506,8 @@ class ChargePointMetric(RestoreSensor, SensorEntity):
     def append_entity_unique_id(self):
         if self.unique_id not in self.target.ha_entity_unique_ids:
             self.target.ha_entity_unique_ids.append(self.unique_id)
+        #else:
+        #    OcppLog.log_i(f"{self.unique_id} already in {self.target.id}")
 
     # Aggiornamento del 08/02/2023
     # I measurand di Energia e Potenza REATTIVA non hanno in Home Assistant una unità di misura standardizzata.
@@ -625,6 +630,7 @@ class ChargePointConnectorMetric(ChargePointMetric):
             str(self._connector.id),
             self.entity_description.key
         ])
+
         self._extra_attr = self.entity_description.extra_attributes
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._connector.identifier)},
@@ -669,6 +675,10 @@ class EVSEMetric(ChargePointMetric):
             str(self._evse.id),
             self.entity_description.key
         ])
+
+        if self._attr_unique_id == "sensor.charge_advisor.Charging-Station-Sim-1.1.power.active.import":
+            OcppLog.log_w(f"Adding {self._attr_unique_id} sensor to EVSE...")
+
         self._extra_attr = self.entity_description.extra_attributes
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._evse.identifier)},
