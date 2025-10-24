@@ -22,7 +22,7 @@ from threading import Thread
 # ----------------------------------------------------------------------------------------------------------------------
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core_config import HomeAssistant
 from homeassistant.const import STATE_OK
 from homeassistant.helpers import device_registry
 

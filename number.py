@@ -20,7 +20,8 @@ from homeassistant.components.number import (
     RestoreNumber,
 )
 from homeassistant.const import UnitOfElectricCurrent, UnitOfPower
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core_config import HomeAssistant
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 

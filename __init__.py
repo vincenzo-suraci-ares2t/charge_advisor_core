@@ -30,7 +30,7 @@ versione_python = platform.python_version()
 # Confronta la versione corrente con 3.12
 if LooseVersion(versione_python) >= LooseVersion('3.12'):
     args = [
-        "python3.12 -m ensurepip --upgrade"
+        f"python3 -m ensurepip --upgrade"
     ]
     sub_proc = subprocess.run(
         args=args,
@@ -39,7 +39,7 @@ if LooseVersion(versione_python) >= LooseVersion('3.12'):
     )
     if sub_proc.returncode == 0:
         logging.info(sub_proc)
-        pip_command = "python3.12 -m pip"
+        pip_command = "python3 -m pip"
     else:
         logging.error(sub_proc)
 
@@ -111,7 +111,7 @@ else:
 # ----------------------------------------------------------------------------------------------------------------------
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import Config, HomeAssistant
+from homeassistant.core_config import Config, HomeAssistant
 from homeassistant.helpers import device_registry
 import homeassistant.helpers.config_validation as cv
 
