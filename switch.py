@@ -50,17 +50,31 @@ class OcppSwitchDescription(
     default_state: bool = False
 
 
-"""
-Gli switch sono aggiunti "staticamente" dall'integrazione.
-Vengono aggiunte le seguenti categorie switch:
-1) uno switch per dis/attivare la comunicazione (websocket) con la Central System (CS OCPP1.6J) ovvero con la Charging 
-   Station Central System (CSMS OCPP2.0.1)
-2) uno switch per dis/attivare la disponibilità di ogni Charging Point (CP OCPP 1.6J) o Charging Station (CS OCPP 2.0.1)
-3) uno switch per dis/attivare la disponibilità di ogni ESVE   
-4) uno switch per dis/attivare la disponibilità di ogni Connector
-5) uno switch per dis/attivare la ricarica (Charge_Control) di ogni Connettore OCPP 1.6 (connesso ad un CP)
-6) uno switch per dis/attivare la ricarica (Charge_Control) di ogni Connettore OCPP 2.0.1 (connesso ad un EVSE)
-"""
+# -------------------------------------------------------------------------------------------------
+#
+# Switches are added "statically" by integration's code itself.
+#
+# The following switches are added:
+#
+# 1. A switch to enable/disable the server communication
+# 2. A switch to enable/disable the Availability of a Charge Point/Charging Station
+# 3. A switch to enable/disable the Availability of an EVSE
+# 4. A switch to enable/disable the Availability of a Connector
+# 5. A switch to start/stop a charging session on an OCPP 1.6 Connector (Charge Control)
+# 6. A switch to start/stop a charging session on an OCPP 2.0.1 EVSE (Charge Control)
+#
+# The following switches are also added (24/10/2025):
+#
+# 7. A switch to enable/disable the print of INFO logs
+# 8. A switch to enable/disable the print of DEBUG logs
+# 9. A switch to enable/disable the print of WARNING logs
+# 10. A switch to enable/disable the print of ERROR logs
+#
+# Switches of category 1, 7, 8, 9 and 10 are added once for the whole integration.
+# Switches of category 2 are added once for each Charge Point/Charging Station.
+# Switches of category 3, 4, 5 and 6 are added once for each EVSE/Connector.
+#
+# -------------------------------------------------------------------------------------------------
 
 # Switch della Central System.
 CENTRAL_SYSTEM_SWITCHES: Final = [
@@ -76,6 +90,30 @@ CENTRAL_SYSTEM_SWITCHES: Final = [
         ],
         default_state=False,
     ),
+    OcppSwitchDescription(
+        key="info_logs_control",
+        name="Enable INFO Logs",
+        icon=ICONS["info"],
+        default_state=True
+    ),
+    OcppSwitchDescription(
+        key="debug_logs_control",
+        name="Enable DEBUG Logs",
+        icon=ICONS["bug"],
+        default_state=True
+    ),
+    OcppSwitchDescription(
+        key="warning_logs_control",
+        name="Enable WARNING Logs",
+        icon=ICONS["alert"],
+        default_state=True
+    ),
+    OcppSwitchDescription(
+        key="error_logs_control",
+        name="Enable ERROR Logs",
+        icon=ICONS["alert-circle"],
+        default_state=True
+    )
 ]
 
 # Switch del Charge Point. Sono gli stessi per OCPP 1.6 e 2.0.1.
@@ -180,10 +218,22 @@ EVSE_CONNECTOR_SWITCHES: Final = [
 async def async_setup_entry(hass, entry, async_add_devices):
     """Configure the switch platform."""
 
+    # ----------------------------------------------------------------------------------------------
     # Get the Central system instance
+    # ----------------------------------------------------------------------------------------------
     central_system = hass.data[DOMAIN][entry.entry_id]    
 
-    entities = [CentralSystemSwitchEntity(central_system, CENTRAL_SYSTEM_SWITCHES[0])]
+    # ----------------------------------------------------------------------------------------------
+    # List which will contain all the setup entries.
+    # ----------------------------------------------------------------------------------------------
+    entities = []
+    
+    # ----------------------------------------------------------------------------------------------
+    # For each switch description related to the Central System itself.
+    # ----------------------------------------------------------------------------------------------
+    for cs_switch in CENTRAL_SYSTEM_SWITCHES:
+        switch_entry = CentralSystemSwitchEntity(central_system, cs_switch)
+        entities.append(switch_entry)
 
     # Per ogni ID Charge Point...
     for cp_id in central_system.charge_points:
