@@ -89,30 +89,6 @@ CENTRAL_SYSTEM_SWITCHES: Final = [
             True #Questa è hard coded per il momento, solo provvisorio
         ],
         default_state=False,
-    ),
-    OcppSwitchDescription(
-        key="info_logs_control",
-        name="Enable INFO Logs",
-        icon=ICONS["info"],
-        default_state=True
-    ),
-    OcppSwitchDescription(
-        key="debug_logs_control",
-        name="Enable DEBUG Logs",
-        icon=ICONS["bug"],
-        default_state=True
-    ),
-    OcppSwitchDescription(
-        key="warning_logs_control",
-        name="Enable WARNING Logs",
-        icon=ICONS["alert"],
-        default_state=True
-    ),
-    OcppSwitchDescription(
-        key="error_logs_control",
-        name="Enable ERROR Logs",
-        icon=ICONS["alert-circle"],
-        default_state=True
     )
 ]
 
