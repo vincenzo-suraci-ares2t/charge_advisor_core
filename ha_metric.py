@@ -28,7 +28,7 @@ from .logger import OcppLog
 from .const import UNITS_OCCP_TO_HA
 
 
-class HomeAssistantEntityMetrics(EntityMetrics):
+class HomeAssistantEntityMetrics:
 
     def __init__(self):
         # Home Assistant metrics needed to evaluate the entities (switches, buttons, etc.) states
