@@ -33,7 +33,8 @@ from homeassistant.helpers import device_registry
 # Local packages
 # ----------------------------------------------------------------------------------------------------------------------
 
-from ocpp_central_system.charging_station_management_system import ChargingStationManagementSystem
+from .ocpp_central_system.ocpp_central_system.charging_station_management_system import ChargingStationManagementSystem
+from .ocpp_central_system.ocpp_central_system.const import DEFAULT_SUBPROTOCOLS
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Local files
@@ -45,6 +46,7 @@ from .const import *
 from .enums import HACentralSystemServices
 from .logger import OcppLog
 from .ha_charging_station_v201 import HomeAssistantChargingStationV201
+from .ha_charging_station_v21 import HomeAssistantChargingStationV21
 
 class HomeAssistantCentralSystem(
     ChargingStationManagementSystem,
@@ -142,6 +144,12 @@ class HomeAssistantCentralSystem(
         )
 
     def _get_init_subprotocols(self):
+        # ----------------------------------------------------------------------------------------
+        # Look for key CONF_SUBPROTOCOLS in self._config_entry.data
+        #
+        # If there's no key named like that, fall back to the superclass's method to retrieve
+        # the supported subprotocols.
+        # ----------------------------------------------------------------------------------------
         return self._config_entry.data.get(
             CONF_SUBPROTOCOLS,
             super()._get_init_subprotocols()
@@ -317,6 +325,32 @@ class HomeAssistantCentralSystem(
             name=cp_id,
             # model=hacp.model,
             model="OCPP 2.0.1 Charging Station",
+            via_device=(DOMAIN, self._id)
+            # manufacturer=hacp.vendor
+        )
+        #OcppLog.log_w(f"Aggiunta del Charge Point integrato al registro dispositivi completata.")
+        return ha_charging_station
+    
+    async def get_charging_station_v21_instance(self, cp_id, websocket):
+        #OcppLog.log_w(f"Istanziazione di un Charge Point integrato...")
+        # Create an instance of HomeAssistantChargePoint class
+        ha_charging_station = HomeAssistantChargingStationV21(
+            id=cp_id,
+            connection=websocket,
+            hass=self._hass,
+            config_entry=self._config_entry,
+            central=self
+        )
+        #OcppLog.log_w(f"ID del Charge Point integrato appena istanziato: {cp_id}.")
+        #OcppLog.log_w(f"Aggiunta del Charge Point integrato al registro dispositivi...")
+        # Create Charge Point Device in Home Assistant
+        ha_dr = device_registry.async_get(self._hass)
+        ha_dr.async_get_or_create(
+            config_entry_id=self._config_entry.entry_id,
+            identifiers={(DOMAIN, cp_id)},
+            name=cp_id,
+            # model=hacp.model,
+            model="OCPP 2.1 Charging Station",
             via_device=(DOMAIN, self._id)
             # manufacturer=hacp.vendor
         )

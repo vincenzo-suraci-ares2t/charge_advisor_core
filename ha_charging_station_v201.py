@@ -34,7 +34,8 @@ import homeassistant.helpers.config_validation as cv
 # Local packages
 # ----------------------------------------------------------------------------------------------------------------------
 
-from ocpp_central_system.ComponentsV201.charging_station_v201 import ChargingStationV201
+#from ocpp_central_system.ComponentsV201.charging_station_v201 import ChargingStationV201
+from .ocpp_central_system.ocpp_central_system.ComponentsV201.charging_station_v201 import *
 from ocpp_central_system.enums import EVSEStatus
 
 # ----------------------------------------------------------------------------------------------------------------------
