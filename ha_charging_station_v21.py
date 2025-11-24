@@ -1,5 +1,9 @@
 from .ocpp_central_system.ocpp_central_system.ComponentsV21.charging_station_v21 import *
 from .ha_charging_station_v201 import HomeAssistantChargingStationV201
+from .ha_evse_v21 import HomeAssistantEVSEV21
+from homeassistant.components.persistent_notification import DOMAIN
+from homeassistant.helpers import device_registry
+from homeassistant.helpers.typing import UNDEFINED
 from .logger import OcppLog
 
 class HomeAssistantChargingStationV21(
@@ -27,7 +31,6 @@ class HomeAssistantChargingStationV21(
             central,
             skip_schema_validation
         )
-        # OcppLog.log_d(f"INIZIALIZZAZIONE CLASSE HomeAssistantChargingStationV201 COMPLETATA")
         ChargingStationV21.__init__(
             self,
             id,
@@ -35,4 +38,20 @@ class HomeAssistantChargingStationV21(
             central,
             skip_schema_validation
         )
-        OcppLog.log_d(f"Creazione di un oggetto di tipo HomeAssistantChargingStationV21 completata.")
+
+    # ----------------------------------------------------------------------------------------
+    # Methods overriding.
+    # ----------------------------------------------------------------------------------------
+    def create_evse_task(self, evse_id: int):
+
+        #OcppLog.log_d(f"Creating a new OCPP 2.1 EVSE instance...")
+
+        ha_evse = HomeAssistantEVSEV21(
+            id=str(evse_id),
+            hass=self._hass,
+            config_entry=self._config_entry,
+            charge_point=self
+        )
+
+        return ha_evse
+

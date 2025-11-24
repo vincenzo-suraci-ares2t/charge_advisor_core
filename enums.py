@@ -100,3 +100,7 @@ class V201HAConnectorChargingSessionSensors(str, Enum):
     HAConnectorChargingSessionSensors.__members__.items()
     charging_connector = ChargingSessionStatus.charging_connector.value
     charging_state = ChargingSessionStatus.charging_state.value
+    ev_soc = "SoC" #TODO: Usa ChargingSessionStatus come con quelli sopra.
+    session_energy_export = "Session.Energy.Export" #TODO: Usa ChargingSessionStatus come con quelli sopra.
+    session_power = "Session.Power" #TODO: Usa ChargingSessionStatus come con quelli sopra.
+    session_power_export = "Session.Power.Export" #TODO: Usa ChargingSessionStatus come con quelli sopra.

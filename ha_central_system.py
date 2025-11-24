@@ -260,8 +260,6 @@ class HomeAssistantCentralSystem(
             OcppLog.log_w(msg)
             await asyncio.sleep(HA_UPDATE_ENTITIES_WAITING_SECS)
 
-
-
         self._adding_entities = True
 
         # OcppLog.log_d(f"Removing and adding all platforms' entities (called by {id})...")
@@ -332,7 +330,6 @@ class HomeAssistantCentralSystem(
         return ha_charging_station
     
     async def get_charging_station_v21_instance(self, cp_id, websocket):
-        #OcppLog.log_w(f"Istanziazione di un Charge Point integrato...")
         # Create an instance of HomeAssistantChargePoint class
         ha_charging_station = HomeAssistantChargingStationV21(
             id=cp_id,
@@ -341,8 +338,6 @@ class HomeAssistantCentralSystem(
             config_entry=self._config_entry,
             central=self
         )
-        #OcppLog.log_w(f"ID del Charge Point integrato appena istanziato: {cp_id}.")
-        #OcppLog.log_w(f"Aggiunta del Charge Point integrato al registro dispositivi...")
         # Create Charge Point Device in Home Assistant
         ha_dr = device_registry.async_get(self._hass)
         ha_dr.async_get_or_create(
@@ -354,7 +349,10 @@ class HomeAssistantCentralSystem(
             via_device=(DOMAIN, self._id)
             # manufacturer=hacp.vendor
         )
-        #OcppLog.log_w(f"Aggiunta del Charge Point integrato al registro dispositivi completata.")
+        # for device_entry in ha_dr.devices.values():
+        #     if device_entry.name is None:
+        #         OcppLog.log_d(f"DISPOSITIVO: {device_entry.name} {device_entry.id} ha nome NONE.")
+
         return ha_charging_station
 
     async def call_ha_service(

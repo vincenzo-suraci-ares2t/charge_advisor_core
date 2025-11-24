@@ -237,20 +237,15 @@ async def async_setup_entry(hass, entry, async_add_devices):
                         )
                     )
         # Altrimenti, se la versione usata è la 2.0.1...
-        # elif charge_point.connection_ocpp_version == SubProtocol.OcppV201.value:
         else:
             # Scorrere gli switch per gli EVSE del Charge Point e aggiungerli alle entità.
-            #OcppLog.log_i(f"Versione protocollo OCPP: 2.0.1.")
-            #OcppLog.log_i(f"EVSE disponibili: {charge_point.evses}.")
             # Per ogni EVSE...
             for evse in charge_point.evses:
 
                 #OcppLog.log_w(f"EVSE in esame: {evse}.")
                 #OcppLog.log_w(f"Tipo dell'EVSE in esame: {type(evse)}.")
                 # Per ogni switch da aggiungere all'EVSE...
-                # OcppLog.log_w(f"Descrizioni di switch disponibili per gli EVSE: {CHARGE_POINT_EVSE_SWITCHES}")
                 for desc in CHARGE_POINT_EVSE_SWITCHES:
-                    #OcppLog.log_w(f"Nome switch in esame: {desc.name}. Per EVSE {evse.id} con identificatore {evse.identifier}.")
                     # Inserire lo switch tra le entità dell'EVSE, usando la descrizione fornita dalla lista
                     # CHARGE_POINT_EVSE_SWITCHES per creare un oggetto di tipo EVSESwitchEntity.
                     #OcppLog.log_w(f"Inserimento switch EVSE...")

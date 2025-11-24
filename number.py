@@ -58,7 +58,7 @@ NUMBERS: Final = [
         name="Maximum Current",
         icon=ICON,
         initial_value=0,
-        native_min_value=0,
+        native_min_value=-250,
         native_max_value=DEFAULT_MAX_CURRENT,
         native_step=1,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
@@ -68,9 +68,9 @@ NUMBERS: Final = [
         name="Maximum Power",
         icon=ICON,
         initial_value=0,
-        native_min_value=0,
+        native_min_value=-25,
         native_max_value=DEFAULT_MAX_POWER,
-        native_step=10,
+        native_step=3,
         native_unit_of_measurement=UnitOfPower.KILO_WATT
     )
 ]
