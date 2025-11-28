@@ -87,6 +87,9 @@ async def async_setup_entry(hass, entry, async_add_devices):
                     entities.append(ChargePointConnectorButtonEntity(central_system, charge_point, connector, ent))
         elif charge_point.connection_ocpp_version == SubProtocol.OcppV201.value:
             pass
+        elif charge_point.connection_ocpp_version == SubProtocol.OcppV21.value:
+            # TODO >>> AGGIUNGERE PULSANTE PER INVIARE CHARGING PROFILE
+            pass
 
     # Aggiungiamo gli unique_id di ogni entità registrata in fase di setup al
     # Charge Point o al Connector

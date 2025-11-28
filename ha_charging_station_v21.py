@@ -47,7 +47,7 @@ class HomeAssistantChargingStationV21(
         #OcppLog.log_d(f"Creating a new OCPP 2.1 EVSE instance...")
 
         ha_evse = HomeAssistantEVSEV21(
-            id=str(evse_id),
+            id=evse_id,
             hass=self._hass,
             config_entry=self._config_entry,
             charge_point=self

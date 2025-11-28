@@ -35,10 +35,11 @@ class HomeAssistantEntityMetrics:
         self._metrics = defaultdict(lambda: HomeAssistantMetric(None, None))
 
     # Questa funzione restituisce il valore di una metrica in base alla chiave
-    # se la metrica non è trovata, restiuisce None
+    # se la metrica non è trovata, restituisce None
     def get_metric_ha_unit(self, key):
         metric = self.get_metric(key)
-        return metric.ha_unit if metric is not None else None
+
+        return metric.ha_unit if (metric and hasattr(metric, "ha_unit")) else None
 
 
 class HomeAssistantMetric(Metric):

@@ -193,10 +193,11 @@ class OcppSensor:
                     )
 
         # --------------------------------------------------------------------------------------------------------------
-        # Sensori associati a ciascun Connettore di ciascun EVSE del Charging Station - OCPP 2.0.1
+        # Sensori associati a ciascun Connettore di ciascun EVSE della 
+        # Charging Station OCPP 2.0.1 oppure OCPP 2.1.
         # --------------------------------------------------------------------------------------------------------------
 
-        elif charge_point.connection_ocpp_version == SubProtocol.OcppV201.value:
+        elif charge_point.connection_ocpp_version in [SubProtocol.OcppV201.value, SubProtocol.OcppV21.value]:
 
             def create_sensors_from_include_components(include_components_obj, sensors):
                 components_list = include_components_obj.componentsList
@@ -331,7 +332,7 @@ class OcppSensor:
                             sensor
                         )
                     )
-        elif charge_point.connection_ocpp_version == SubProtocol.OcppV201.value:
+        elif charge_point.connection_ocpp_version in [SubProtocol.OcppV201.value,SubProtocol.OcppV21.value]:
             for sensor in sensors:
                 connector_id = sensor.connector_id
                 evse_id = sensor.evse_id

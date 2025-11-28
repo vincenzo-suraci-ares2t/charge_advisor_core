@@ -237,7 +237,7 @@ async def async_setup_entry(hass, entry, async_add_devices):
                         )
                     )
         # Altrimenti, se la versione usata è la 2.0.1...
-        else:
+        elif charge_point.connection_ocpp_version in [SubProtocol.OcppV201.value,SubProtocol.OcppV21.value]:
             # Scorrere gli switch per gli EVSE del Charge Point e aggiungerli alle entità.
             # Per ogni EVSE...
             for evse in charge_point.evses:

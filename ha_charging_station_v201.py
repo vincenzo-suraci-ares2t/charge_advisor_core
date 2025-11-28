@@ -392,7 +392,7 @@ class HomeAssistantChargingStationV201(
     def create_evse_task(self, evse_id: int):
 
         ha_evse = HomeAssistantEVSEV201(
-            id=str(evse_id),
+            id=evse_id,
             hass=self._hass,
             config_entry=self._config_entry,
             charge_point=self

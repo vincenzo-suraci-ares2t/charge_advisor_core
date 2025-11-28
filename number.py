@@ -125,7 +125,7 @@ async def async_setup_entry(hass, entry, async_add_devices):
                     # Add a ChargePointConnectorOcppNumber object to the entity list.
                     # --------------------------------------------------------------------------------------------------
                     entities.append(ChargePointConnectorOcppNumber(hass, central_system, charge_point, connector, ent))
-        elif charge_point.connection_ocpp_version == SubProtocol.OcppV201.value:
+        elif charge_point.connection_ocpp_version in [SubProtocol.OcppV201.value,SubProtocol.OcppV21.value]:
             # ----------------------------------------------------------------------------------------------------------
             # If it's 2.0.1, loop through all the EVSEs...
             # ----------------------------------------------------------------------------------------------------------
@@ -247,7 +247,7 @@ class ChargePointOcppNumber(RestoreNumber, NumberEntity):
                 if resp is True:
                     self._attr_native_value = num_value
                     self.async_write_ha_state()
-        elif self._charge_point.connection_ocpp_version == SubProtocol.OcppV201.value:
+        elif self._charge_point.connection_ocpp_version in [SubProtocol.OcppV201.value,SubProtocol.OcppV21.value]:
             if self.target.is_available() and self._charge_point.get_metric("SmartChargingCtrlr.Available"):
                 # ------------------------------------------------------------------------------------------------------
                 # Check whether the attribute to be changed is current or power...
