@@ -44,7 +44,7 @@ _LOGGER.debug(f"Charge Advisor is currently using Python {versione_python}")
 # ------------------------------------------------------------------------------------------------
 if LooseVersion(versione_python) >= LooseVersion('3.13'):
     
-    args = [
+    """args = [
         "python3.13 -m ensurepip --upgrade"
     ]
     sub_proc = subprocess.run(
@@ -56,7 +56,7 @@ if LooseVersion(versione_python) >= LooseVersion('3.13'):
         _LOGGER.info(sub_proc)
         pip_command = "python3.13 -m pip"
     else:
-        _LOGGER.error(sub_proc)
+        _LOGGER.error(sub_proc)"""
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Importing dinamico del package ocpp-central-system
@@ -107,7 +107,7 @@ elif INTEGRATION_TYPE == INTEGRATION_TYPE_DEV:
     # Installazione del package da locale, modalità DEV
     local_package_name = "./custom_components/charge_advisor/ocpp_central_system"
     args = [
-        f"{pip_command} install --upgrade --force-reinstall -e {local_package_name}"
+        f"{pip_command} install --upgrade --force-reinstall --no-cache-dir -e {local_package_name}"
     ]
     sub_proc = subprocess.run(
         args=args,
