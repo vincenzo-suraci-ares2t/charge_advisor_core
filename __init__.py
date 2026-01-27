@@ -11,6 +11,12 @@ from distutils.version import LooseVersion
 
 from .config import *
 
+# ------------------------------------------------------------------------------------------------
+# Retrieve the correct logging object, so that the log severity options in configuration.yaml
+# that are specific to this integration will be followed (instead of the default ones).
+# ------------------------------------------------------------------------------------------------
+_LOGGER = logging.getLogger(__name__)
+
 # ----------------------------------------------------------------------------------------------------------------------
 # Pip command
 # In base alla versione di Python si utilizzerà
@@ -25,12 +31,21 @@ from .config import *
 # source: https://ubuntuhandbook.org/index.php/2023/10/fix-broken-pip-python-312-ubuntu/
 
 pip_command = "pip"
-# Ottieni la versione corrente di Python
+
+# ------------------------------------------------------------------------------------------------
+# Get the current version of Python.
+# ------------------------------------------------------------------------------------------------
 versione_python = platform.python_version()
-# Confronta la versione corrente con 3.12
-if LooseVersion(versione_python) >= LooseVersion('3.12'):
+
+_LOGGER.debug(f"Charge Advisor is currently using Python {versione_python}")
+
+# ------------------------------------------------------------------------------------------------
+# Check the Python version...
+# ------------------------------------------------------------------------------------------------
+if LooseVersion(versione_python) >= LooseVersion('3.13'):
+    
     args = [
-        f"python3 -m ensurepip --upgrade"
+        "python3.13 -m ensurepip --upgrade"
     ]
     sub_proc = subprocess.run(
         args=args,
@@ -38,10 +53,10 @@ if LooseVersion(versione_python) >= LooseVersion('3.12'):
         capture_output=True
     )
     if sub_proc.returncode == 0:
-        logging.info(sub_proc)
-        pip_command = "python3 -m pip"
+        _LOGGER.info(sub_proc)
+        pip_command = "python3.13 -m pip"
     else:
-        logging.error(sub_proc)
+        _LOGGER.error(sub_proc)
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Importing dinamico del package ocpp-central-system
@@ -61,9 +76,9 @@ if INTEGRATION_TYPE == INTEGRATION_TYPE_PROD:
         capture_output=True
     )
     if sub_proc.returncode == 0:
-        logging.info(sub_proc)
+        _LOGGER.info(sub_proc)
     else:
-        logging.error(sub_proc)
+        _LOGGER.error(sub_proc)
     # Installazione del package ocpp_central_system da bitbucket con chiave privata
     # Path assoluto alla chiave per accedere al repository di ocpp_central_system
     key_path = "/config/ssh-keys/ocpp-central-system-key"
@@ -81,9 +96,9 @@ if INTEGRATION_TYPE == INTEGRATION_TYPE_PROD:
         capture_output=True
     )
     if sub_proc.returncode == 0:
-        logging.info(sub_proc)
+        _LOGGER.info(sub_proc)
     else:
-        logging.error(sub_proc)
+        _LOGGER.error(sub_proc)
 elif INTEGRATION_TYPE == INTEGRATION_TYPE_DEV:
     # ------------------------------------------------------------------------------------------------------------------
     # DEVELOPER
@@ -100,18 +115,19 @@ elif INTEGRATION_TYPE == INTEGRATION_TYPE_DEV:
         capture_output=True
     )
     if sub_proc.returncode == 0:
-        logging.info(sub_proc)
+        _LOGGER.info(sub_proc)
     else:
-        logging.error(sub_proc)
+        _LOGGER.error(sub_proc)
 else:
-    logging.error("Invalid INTEGRATION_TYPE: " + INTEGRATION_TYPE)
+    _LOGGER.error("Invalid INTEGRATION_TYPE: " + INTEGRATION_TYPE)
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Home Assistant packages
 # ----------------------------------------------------------------------------------------------------------------------
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core_config import Config, HomeAssistant
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers import device_registry
 import homeassistant.helpers.config_validation as cv
 
@@ -171,7 +187,7 @@ CONFIG_SCHEMA = vol.Schema(
 # Home Assistant Functions
 # ----------------------------------------------------------------------------------------------------------------------
 
-async def async_setup(hass: HomeAssistant, config: Config):
+async def async_setup(hass: HomeAssistant, config: ConfigType):
 
     """Read configuration from yaml."""
 
