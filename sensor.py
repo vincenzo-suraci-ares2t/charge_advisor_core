@@ -35,7 +35,10 @@ import homeassistant.const as ha
 # ----------------------------------------------------------------------------------------------------------------------
 
 from ocpp.v16.enums import ChargePointStatus
-from ocpp.v201.enums import ConnectorStatusType, ChargingStateType
+from ocpp.v201.enums import (
+    ConnectorStatusEnumType as ConnectorStatusType, 
+    ChargingStateEnumType as ChargingStateType
+)
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -90,6 +93,24 @@ class OcppSensorDescription(SensorEntityDescription):
     native_uom: str | None = None
     native_value: any | None = None
 
+    def __eq__(self, other):
+        """Confronta due istanze per verificare se rappresentano lo stesso sensore logico."""
+        if not isinstance(other, OcppSensorDescription):
+            return NotImplemented
+        
+        # Due sensori sono identici se hanno la stessa chiave e appartengono 
+        # allo stesso hardware (Connector/EVSE)
+        return (
+            self.metric_key == other.metric_key and
+            self.connector_id == other.connector_id and
+            self.evse_id == other.evse_id
+        )
+
+    def __hash__(self):
+        """Rende l'oggetto hashable per poterlo usare in set() o come chiave di dict."""
+        # L'hash deve essere basato sugli stessi campi usati in __eq__
+        return hash((self.metric_key, self.connector_id, self.evse_id))
+
 
 class OcppSensor:
 
@@ -101,7 +122,7 @@ class OcppSensor:
         match metric_key:
             case [ HAChargePointSensors.latency_ping, HAChargePointSensors.latency_pong ]:
                 native_uom = ha.UnitOfTime.MILLISECONDS
-                OcppLog.log_d(f"Debug >>> Unità di misura di {metric_key}: {native_uom}")
+                # OcppLog.log_d(f"Debug >>> Unità di misura di {metric_key}: {native_uom}")
         return native_uom
 
     # Aggiornamento del 09/04/2024
@@ -199,23 +220,51 @@ class OcppSensor:
 
         elif charge_point.connection_ocpp_version in [SubProtocol.OcppV201.value, SubProtocol.OcppV21.value]:
 
+            # ------------------------------------------------------------------------------------
+            # Internal method that, given a certain IncludeComponents object, adds a new Sensor
+            # configuration for each of its components.
+            # ------------------------------------------------------------------------------------
             def create_sensors_from_include_components(include_components_obj, sensors):
+
+                # --------------------------------------------------------------------------------
+                # Retrieve the components dictionary from the object.
+                # --------------------------------------------------------------------------------
                 components_list = include_components_obj.componentsList
                 #OcppLog.log_e(f"Lista dei components... {components_list}")
                 for component_name in components_list:
 
+                    # ----------------------------------------------------------------------------
+                    # Retrieve the Component itself.
+                    # Update the component_name variable.
+                    # ----------------------------------------------------------------------------
                     component = include_components_obj.get_component(component_name)
                     component_name = component.name
 
+                    # ----------------------------------------------------------------------------
+                    # For each key of the dictionary of Variables...
+                    # ----------------------------------------------------------------------------
                     for variable_name in list(component.get_variables()):
-                        # OcppLog.log_w(f"Istanze di variabile in esame in esame: {variable} - {component._variables.get(variable)}.")
-
+                        
+                        # ------------------------------------------------------------------------
+                        # Retrieve the instances of that variable and loop over their names.
+                        # ------------------------------------------------------------------------
                         for variable_instance_name in component.get_variable_instances(variable_name):
 
+                            # --------------------------------------------------------------------
+                            # Retrieve the exact Variable object based on its name and the name
+                            # of its instance.
+                            # --------------------------------------------------------------------
                             variable = component.get_variable(variable_name, variable_instance_name)
 
+                            # --------------------------------------------------------------------
+                            # For each Variable Attribute...
+                            # --------------------------------------------------------------------
                             for variable_attribute_type in variable.variable_attributes:
 
+                                # ----------------------------------------------------------------
+                                # Compose a Metric Key based on the Component name and instance,
+                                # on the Variable name and instance and on the Variable Attribute.
+                                # ----------------------------------------------------------------
                                 metric_key = component.tier.compose_metric_key(
                                     component_name=component_name,
                                     component_instance=component.instance,
@@ -224,6 +273,14 @@ class OcppSensor:
                                     attribute_type=variable_attribute_type
                                 )
 
+                                # ----------------------------------------------------------------
+                                # Fill the variables for the Connector ID and EVSE ID according to 
+                                # the tier level of the component (which can be ChargingStation, 
+                                # EVSE or Connector).
+                                #
+                                # If the tier level isn't specified, set both Connector ID and
+                                # EVSE ID to "None".
+                                # ----------------------------------------------------------------
                                 match component.tier.tier_level:
                                     case TierLevel.ChargingStation:
                                         connector_id = None
@@ -234,16 +291,18 @@ class OcppSensor:
                                     case TierLevel.Connector:
                                         connector_id = component.tier.id
                                         evse_id = component.tier.evse_id
-                                        #OcppLog.log_d(f"Adding to Connector ID {connector_id} on EVSE {evse_id}")
                                     case _:
                                         connector_id = None
                                         evse_id = None
 
-
+                                # ----------------------------------------------------------------
+                                # If the component name doesn't contain the string "Ctrlr" (which
+                                # means it's not a Controller Component), compose a sensor
+                                # description and append it to the "sensors" list.
+                                # ----------------------------------------------------------------
                                 if "Ctrlr" not in component_name:
                                     desc = OcppSensorDescription(
                                             key=metric_key.lower(),
-                                            #name=metric_key.replace(".", " "),
                                             name=" ".join(metric_key.split(".")),
                                             metric_key=metric_key,
                                             connector_id=connector_id,
@@ -254,11 +313,19 @@ class OcppSensor:
                                         )
                                     sensors.append(desc)
 
+            # ------------------------------------------------------------------------------------
+            # Internal method that, given a certain tier level, adds new sensor configurations
+            # for each Metric Key in the list of measurands of the specified tier level.
+            # ------------------------------------------------------------------------------------
             def create_sensors_from_tier_level(tier_level, sensors):
 
                 connector_id = None
                 evse_id = None
 
+                # --------------------------------------------------------------------------------
+                # If the specified tier level is "EVSE" or "Connector", save the values for the
+                # EVSE ID and Connector ID accordingly.
+                # --------------------------------------------------------------------------------
                 match tier_level.tier_level:
                     case TierLevel.EVSE:
                         evse_id = tier_level.id
@@ -266,6 +333,10 @@ class OcppSensor:
                         connector_id = tier_level.connector_id
                         evse_id = tier_level.evse.id
 
+                # --------------------------------------------------------------------------------
+                # For each Metric Key in the list of measurands related to that tier level,
+                # create an OcppSensorDescription object and append it to the "sensors" list.
+                # --------------------------------------------------------------------------------
                 for metric_key in tier_level.measurands_list:
                     desc = OcppSensorDescription(
                             key=metric_key.lower(),
@@ -277,14 +348,13 @@ class OcppSensor:
                             native_uom=OcppSensor.get_native_uom_by_metric_key(metric_key),
                             native_value=OcppSensor.get_native_value_by_metric_key(metric_key)
                         )
-                    sensors.append(
-                        desc
-                    )
+                    sensors.append(desc)
+
+            evse_sensors = set(list(V201HAConnectorChargingSessionSensors)) | set(list(HAConnectorChargingSessionSensors))
 
             create_sensors_from_include_components(charge_point, sensors)
             create_sensors_from_tier_level(charge_point, sensors)
 
-            evse_sensors = set(list(V201HAConnectorChargingSessionSensors)) | set(list(HAConnectorChargingSessionSensors))
             for evse in charge_point.evses:
                 create_sensors_from_include_components(evse, sensors)
                 create_sensors_from_tier_level(evse, sensors)
@@ -307,8 +377,14 @@ class OcppSensor:
         # --------------------------------------------------------------------------------------------------------------
         # Entità associate ai sensori del Charge Point
         # --------------------------------------------------------------------------------------------------------------
-
         entities = []
+
+        # ----------------------------------------------------------------------------------------
+        # Remove the duplicates from the "sensors" array using the new (Feb 2026) comparison 
+        # methods for the class OcppSensorDescription, that allow comparisons between instances of
+        # that class and the creation of sets using lists of them.
+        # ----------------------------------------------------------------------------------------
+        sensors = list(set(sensors))
 
         if charge_point.connection_ocpp_version == SubProtocol.OcppV16.value:
             for sensor in sensors:
@@ -482,7 +558,10 @@ class ChargePointMetric(RestoreSensor, SensorEntity):
         state_class = None
         #OcppLog.log_w(f"Device Class del sensore {self._attr_name}: {self.device_class}.")
         #OcppLog.log_w(f"Unità di misura nativa di {self._attr_name}: {self.native_unit_of_measurement}.")
-        if self.device_class is SensorDeviceClass.ENERGY:
+        if self.device_class in [
+            SensorDeviceClass.ENERGY, 
+            SensorDeviceClass.REACTIVE_ENERGY
+        ]:
             state_class = SensorStateClass.TOTAL_INCREASING
         elif self.device_class in [
             SensorDeviceClass.CURRENT,
@@ -503,22 +582,7 @@ class ChargePointMetric(RestoreSensor, SensorEntity):
     def append_entity_unique_id(self):
         if self._attr_unique_id not in self.target.ha_entity_unique_ids:
             self.target.ha_entity_unique_ids.append(self._attr_unique_id)
-
-    # Aggiornamento del 08/02/2023
-    # I measurand di Energia e Potenza REATTIVA non hanno in Home Assistant una unità di misura standardizzata.
-    # Home Assistant supporta solo W, kW, Wh e kWh.
-    #
-    # Pertanto, impostando Energia e Potenza REATTIVA con le loro unità di misura (var, kvar per la potenza e
-    # varh, kvarh per la energia) nelle classi Home Assistant SensorDeviceClass.ENERGY e SensorDeviceClass.POWER
-    # dà i seguenti errori:
-    # a) WARNING(MainThread)[homeassistant.components.sensor] Entity sensor.charge_point_1_1_energy_reactive_export_interval
-    #    (<class 'custom_components.ocpp.sensor.ChargePointConnectorMetric'> ) is using native unit of measurement
-    #    'UnitOfMeasure.kvarh' which is not a valid unit for the device
-    # b) WARNING(MainThread)[homeassistant.components.sensor] Entity sensor.charge_point_1_1_power_reactive_import
-    #    (<class 'custom_components.ocpp.sensor.ChargePointConnectorMetric'> ) is using native unit of measurement
-    #    'UnitOfMeasure.kvar' which is not a valid unit for the device
-    #
-    # Per ovviare al problema, evitiamo di attribuire tali classi ai sensori di Energia e Potenza REATTIVA
+            #OcppLog.log_w(f"HIT! --- ID {self._attr_unique_id} aggiunto.")
 
     @property
     def device_class(self):
@@ -529,8 +593,10 @@ class ChargePointMetric(RestoreSensor, SensorEntity):
             device_class = SensorDeviceClass.CURRENT
         elif mk.startswith("voltage"):
             device_class = SensorDeviceClass.VOLTAGE
-        elif mk.startswith("energy."):
+        elif mk.startswith("energy.active"):
             device_class = SensorDeviceClass.ENERGY
+        elif mk.startswith("energy.reactive"):
+            device_class = SensorDeviceClass.REACTIVE_ENERGY
         elif self._metric_key in [
                 Measurand.frequency.value,
                 Measurand.rpm.value,
@@ -629,7 +695,7 @@ class ChargePointConnectorMetric(ChargePointMetric):
         self._extra_attr = self.entity_description.extra_attributes
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._connector.identifier)},
-            via_device=(DOMAIN, charge_point),
+            via_device=(DOMAIN, charge_point.id),
         )
 
         # OcppLog.log_d(f"Adding {self._attr_unique_id} entity")
@@ -673,10 +739,8 @@ class EVSEMetric(ChargePointMetric):
         self._extra_attr = self.entity_description.extra_attributes
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._evse.identifier)},
-            via_device=(DOMAIN, charge_point),
+            via_device=(DOMAIN, charge_point.id),
         )
-
-        # OcppLog.log_d(f"Adding {self._attr_unique_id} entity")
 
     @property
     def target(self):

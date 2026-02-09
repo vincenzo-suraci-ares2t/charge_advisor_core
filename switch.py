@@ -25,7 +25,10 @@ from homeassistant.helpers.entity import DeviceInfo
 # ----------------------------------------------------------------------------------------------------------------------
 
 from ocpp.v16.enums import ChargePointStatus, Measurand, AvailabilityType
-from ocpp.v201.enums import OperationalStatusType, ConnectorStatusType
+from ocpp.v201.enums import (
+    OperationalStatusEnumType as OperationalStatusType, 
+    ConnectorStatusEnumType as ConnectorStatusType
+)
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Local packages

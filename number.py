@@ -43,7 +43,7 @@ from ocpp_central_system.time_utils import TimeUtils
 from .const import *
 from .enums import Profiles, SubProtocol
 
-from ocpp.v201.enums import AttributeType
+from ocpp.v201.enums import AttributeEnumType as AttributeType
 
 @dataclass
 class OcppNumberDescription(NumberEntityDescription):

@@ -3,6 +3,7 @@
 # ----------------------------------------------------------------------------------------------------------------------
 # Python packages
 # ----------------------------------------------------------------------------------------------------------------------
+from ocpp.v201.enums import StandardizedUnitsOfMeasureType
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Home Assistant packages
@@ -91,7 +92,7 @@ UNITS_OCCP_TO_HA = {
     UnitOfMeasure.fahrenheit: ha.UnitOfTemperature.FAHRENHEIT,
     UnitOfMeasure.k: ha.UnitOfTemperature.KELVIN,
     UnitOfMeasure.percent: ha.PERCENTAGE,
-    UnitOfMeasure.hertz: ha.UnitOfFrequency.HERTZ,
+    StandardizedUnitsOfMeasureType.hz: ha.UnitOfFrequency.HERTZ,
 }
 
 # Home Assistant Charge Point Diagnostic sensors

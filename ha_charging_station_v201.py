@@ -15,7 +15,10 @@ import asyncio
 import voluptuous as vol
 
 from ocpp.exceptions import NotImplementedError
-from ocpp.v201.enums import Action, ConnectorStatusType, OperationalStatusType
+from ocpp.v201.enums import (
+    Action, ConnectorStatusEnumType as ConnectorStatusType, 
+    OperationalStatusEnumType as OperationalStatusType
+)
 from ocpp.routing import on
 
 # from .ocpp_central_system.ocpp_central_system.enums import Profiles
@@ -588,7 +591,7 @@ class HomeAssistantChargingStationV201(
         self._status = STATE_OK
         await super().reconnect(connection)
 
-    @on(Action.NotifyReport)
+    @on(Action.notify_report)
     def on_notify_report(self, request_id, generated_at, tbc, seq_no, report_data, **kwargs):
         res = super().on_notify_report(request_id, generated_at, tbc, seq_no, report_data, **kwargs)
         if not tbc:

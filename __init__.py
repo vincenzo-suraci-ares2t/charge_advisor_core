@@ -37,14 +37,14 @@ pip_command = "pip"
 # ------------------------------------------------------------------------------------------------
 versione_python = platform.python_version()
 
-_LOGGER.debug(f"Charge Advisor is currently using Python {versione_python}")
+_LOGGER.info(f"Charge Advisor is currently using Python {versione_python}")
 
 # ------------------------------------------------------------------------------------------------
 # Check the Python version...
 # ------------------------------------------------------------------------------------------------
 if LooseVersion(versione_python) >= LooseVersion('3.13'):
-    
-    """args = [
+    pass
+    """ args = [
         "python3.13 -m ensurepip --upgrade"
     ]
     sub_proc = subprocess.run(
@@ -56,7 +56,7 @@ if LooseVersion(versione_python) >= LooseVersion('3.13'):
         _LOGGER.info(sub_proc)
         pip_command = "python3.13 -m pip"
     else:
-        _LOGGER.error(sub_proc)"""
+        _LOGGER.error(sub_proc) """
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Importing dinamico del package ocpp-central-system
@@ -103,15 +103,17 @@ elif INTEGRATION_TYPE == INTEGRATION_TYPE_DEV:
     # ------------------------------------------------------------------------------------------------------------------
     # DEVELOPER
     # ------------------------------------------------------------------------------------------------------------------
-
     # Installazione del package da locale, modalità DEV
     local_package_name = "./custom_components/charge_advisor/ocpp_central_system"
     args = [
-        f"{pip_command} install --upgrade --force-reinstall --no-cache-dir -e {local_package_name}"
+        "python3.13", "-m", "pip", 
+        "install", 
+        "--upgrade", 
+        local_package_name
     ]
     sub_proc = subprocess.run(
         args=args,
-        shell=True,
+        shell=False,
         capture_output=True
     )
     if sub_proc.returncode == 0:
@@ -205,7 +207,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     """Set up this integration from config entry."""
 
-    # OcppLog.log_d("Integration setup from config entry")
+    #_LOGGER.info("Integration setup from config entry...")
 
     if hass.data.get(DOMAIN) is None:
         hass.data.setdefault(DOMAIN, {})
@@ -270,8 +272,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
     """Reload config entry."""
-
-    # OcppLog.log_d("Reload config entry")
 
     await async_unload_entry(hass, entry)
     await async_setup_entry(hass, entry)
