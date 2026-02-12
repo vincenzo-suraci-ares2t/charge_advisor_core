@@ -99,7 +99,7 @@ class HAConnectorChargingSessionSensors(str, Enum):
 # can't simply extend it, because in Python the classes that extend Enum can't be further extended.
 # ----------------------------------------------------------------------------------------------------------------------
 class V201HAConnectorChargingSessionSensors(str, Enum):
-    # HAConnectorChargingSessionSensors.__members__.items()
+    HAConnectorChargingSessionSensors.__members__.items()
     charging_connector = ChargingSessionStatus.charging_connector.value
     charging_state = ChargingSessionStatus.charging_state.value
     ev_soc = "SoC" #TODO: Usa ChargingSessionStatus come con quelli sopra.
